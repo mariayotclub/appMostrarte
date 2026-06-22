@@ -1,62 +1,150 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, Button, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+} from 'react-native';
 
-import { auth } from '../firebase'; 
-import { createUserWithEmailAndPassword } from 'firebase/auth'; 
+import { auth } from '../firebase';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
 import { RootStackParamList } from '../App';
+import { Colors, Radius, Spacing } from '../styles/theme';
 
 type RegisterScreenProp = NativeStackNavigationProp<RootStackParamList, 'Register'>;
 
 export default function Register() {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+
   const navigation = useNavigation<RegisterScreenProp>();
 
   const cadastrar = () => {
     createUserWithEmailAndPassword(auth, email, senha)
       .then(() => {
-        Alert.alert("Sucesso!", "Conta criada!");
-        navigation.replace('Home');
+        Alert.alert('Sucesso', 'Conta criada!');
+        navigation.replace('Main');
       })
       .catch((erro) => {
-        Alert.alert("Erro", erro.message);
+        Alert.alert('Erro', erro.message);
       });
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Cadastro</Text>
-      
-      <TextInput 
-        style={styles.input} 
-        placeholder='E-mail' 
-        autoCapitalize="none" 
-        onChangeText={setEmail} 
-        value={email} 
-      />
-      
-      <TextInput 
-        style={styles.input} 
-        placeholder='Senha' 
-        secureTextEntry 
-        onChangeText={setSenha} 
-        value={senha} 
-      />
-      
-      <Button title='Cadastrar' onPress={cadastrar} />
-      
-      <View style={{ marginTop: 20 }}>
-        <Button title='Voltar ao Login' onPress={() => navigation.goBack()} color="#666" />
+
+      <View style={styles.card}>
+
+        {/* HEADER */}
+        <View style={styles.header}>
+          <Text style={styles.title}>Cadastro</Text>
+        </View>
+
+        {/* INPUTS */}
+        <TextInput
+          style={styles.input}
+          placeholder="E-mail"
+          placeholderTextColor={Colors.muted}
+          autoCapitalize="none"
+          value={email}
+          onChangeText={setEmail}
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Senha"
+          placeholderTextColor={Colors.muted}
+          secureTextEntry
+          value={senha}
+          onChangeText={setSenha}
+        />
+
+        {/* BUTTON */}
+        <TouchableOpacity style={styles.button} onPress={cadastrar}>
+          <Text style={styles.buttonText}>Cadastrar</Text>
+        </TouchableOpacity>
+
+        {/* BACK */}
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={styles.backText}>Voltar ao login</Text>
+        </TouchableOpacity>
+
       </View>
+
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, justifyContent: 'center' },
-  title: { fontSize: 24, marginBottom: 20, textAlign: 'center' },
-  input: { borderWidth: 1, padding: 10, marginBottom: 15, borderRadius: 5 }
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: Spacing.lg,
+    backgroundColor: Colors.background,
+  },
+
+  card: {
+    backgroundColor: Colors.white,
+    padding: Spacing.lg,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+
+  header: {
+    backgroundColor: Colors.primary,
+    padding: Spacing.md,
+    borderRadius: Radius.md,
+    marginBottom: Spacing.md,
+  },
+
+  title: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: Colors.white,
+  },
+
+  input: {
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: Spacing.md,
+    borderRadius: Radius.sm,
+    marginBottom: Spacing.sm,
+    color: Colors.text,
+    backgroundColor: Colors.white,
+  },
+
+  button: {
+    backgroundColor: Colors.primary,
+    padding: Spacing.md,
+    borderRadius: Radius.md,
+    alignItems: 'center',
+    marginTop: Spacing.sm,
+  },
+
+  buttonText: {
+    color: Colors.white,
+    fontWeight: 'bold',
+  },
+
+  backButton: {
+    marginTop: Spacing.md,
+    alignItems: 'center',
+    padding: Spacing.sm,
+  },
+
+  backText: {
+    color: Colors.primary,
+    fontWeight: '600',
+  },
 });

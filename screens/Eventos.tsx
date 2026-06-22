@@ -3,13 +3,16 @@ import {
   View,
   Text,
   TextInput,
-  Button,
   FlatList,
   StyleSheet,
-  Image,
+  Modal,
+  TouchableOpacity,
 } from 'react-native';
+
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { useEventosLogic } from '../hooks/useEventoLogic';
+
+import { Colors, Radius, Spacing } from '../styles/theme';
 
 export default function Eventos() {
   const {
@@ -25,56 +28,71 @@ export default function Eventos() {
     abrirDatePicker,
     fecharDatePicker,
     confirmarData,
-    editingId,
     adicionarEvento,
     deletarEvento,
     iniciarEdicao,
     processarImagem,
-    uploadImagemEvento,
+    imageUri,
+    uploading,
+    isEditModalVisible,
+    fecharEdicao,
   } = useEventosLogic();
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>
-        {editingId ? 'Editar Evento' : 'Criar Evento'}
-      </Text>
 
+      {/* HEADER */}
+      <View style={styles.header}>
+        <Text style={styles.title}>Eventos</Text>
+      </View>
+
+      {/* CREATE FORM */}
       <TextInput
+        style={styles.input}
         placeholder="Título"
+        placeholderTextColor={Colors.muted}
         value={title}
         onChangeText={setTitle}
-        style={styles.input}
       />
 
       <TextInput
+        style={styles.input}
         placeholder="Descrição"
+        placeholderTextColor={Colors.muted}
         value={descricao}
         onChangeText={setDescricao}
-        style={styles.input}
       />
 
       <TextInput
+        style={styles.input}
         placeholder="Local"
+        placeholderTextColor={Colors.muted}
         value={local}
         onChangeText={setLocal}
-        style={styles.input}
       />
 
-      <Button title="Selecionar data" onPress={abrirDatePicker} />
+      <TouchableOpacity style={styles.button} onPress={abrirDatePicker}>
+        <Text style={styles.buttonText}>Selecionar data</Text>
+      </TouchableOpacity>
 
-      <Text>
-        {data ? data.toLocaleDateString() : 'Nenhuma data'}
+      <Text style={styles.status}>
+        {data ? `Data: ${data.toLocaleDateString('pt-BR')}` : 'Nenhuma data selecionada'}
       </Text>
 
-      <Button
-        title="Selecionar imagem"
+      <TouchableOpacity
+        style={styles.buttonSecondary}
         onPress={() => processarImagem('galeria')}
-      />
+      >
+        <Text style={styles.buttonTextSecondary}>Selecionar imagem</Text>
+      </TouchableOpacity>
 
-      <Button
-        title={editingId ? 'Salvar edição' : 'Criar evento'}
-        onPress={adicionarEvento}
-      />
+      <Text style={styles.status}>
+        {imageUri ? 'Imagem selecionada' : 'Nenhuma imagem selecionada'}
+      </Text>
+
+      <TouchableOpacity style={styles.buttonPrimary} onPress={adicionarEvento}>
+        <Text style={styles.buttonText}> {uploading ? 'Salvando...' : 'Criar evento'} </Text>
+      </TouchableOpacity>
 
       <DateTimePickerModal
         isVisible={isDatePickerVisible}
@@ -83,41 +101,98 @@ export default function Eventos() {
         onCancel={fecharDatePicker}
       />
 
+      {/* LISTA */}
       <FlatList
         data={eventos}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.card}>
-            {item.imageUrl ? (
-              <Image source={{ uri: item.imageUrl }} style={styles.image} />
-            ) : (
-              <View style={styles.placeholder}>
-                <Text style={{ textAlign: 'center', color: '#666' }}>Sem imagem</Text>
-              </View>
-            )}
-
             <Text style={styles.name}>{item.title}</Text>
-            <Text>{item.local}</Text>
-            <Text>{item.descricao}</Text>
+            <Text style={styles.text}>{item.descricao}</Text>
+            <Text style={styles.text}>Local: {item.local}</Text>
+            <Text style={styles.date}>
+              {new Date(item.data).toLocaleDateString('pt-BR')}
+            </Text>
 
             <View style={styles.actions}>
-              <Button
-                title="Editar"
+              <TouchableOpacity
+                style={styles.smallButton}
                 onPress={() => iniciarEdicao(item)}
-              />
-              <Button
-                title="Excluir"
-                color="red"
+              >
+                <Text style={styles.smallButtonText}>Editar</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.smallButtonDanger}
                 onPress={() => deletarEvento(item.id)}
-              />
-              <Button
-                title="Upload imagem"
-                onPress={() => uploadImagemEvento(item.id)}
-              />
+              >
+                <Text style={styles.smallButtonText}>Excluir</Text>
+              </TouchableOpacity>
             </View>
           </View>
         )}
       />
+
+      {/* MODAL */}
+      <Modal visible={isEditModalVisible} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+
+            <Text style={styles.modalTitle}>Editar Evento</Text>
+
+            <TextInput
+              style={styles.input}
+              value={title}
+              onChangeText={setTitle}
+              placeholder="Título"
+              placeholderTextColor={Colors.muted}
+            />
+
+            <TextInput
+              style={styles.input}
+              value={descricao}
+              onChangeText={setDescricao}
+              placeholder="Descrição"
+              placeholderTextColor={Colors.muted}
+            />
+
+            <TextInput
+              style={styles.input}
+              value={local}
+              onChangeText={setLocal}
+              placeholder="Local"
+              placeholderTextColor={Colors.muted}
+            />
+
+            <TouchableOpacity style={styles.button} onPress={abrirDatePicker}>
+              <Text style={styles.buttonText}>Selecionar data</Text>
+            </TouchableOpacity>
+
+            <Text style={styles.status}>
+              {data ? data.toLocaleDateString('pt-BR') : 'Nenhuma data'}
+            </Text>
+
+            <TouchableOpacity
+              style={styles.buttonSecondary}
+              onPress={() => processarImagem('galeria')}
+            >
+              <Text style={styles.buttonTextSecondary}>Selecionar imagem</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.buttonPrimary} onPress={adicionarEvento}>
+              <Text style={styles.buttonText}>
+                {uploading ? 'Salvando...' : 'Salvar'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.buttonDanger} onPress={fecharEdicao}>
+              <Text style={styles.buttonText}>Cancelar</Text>
+            </TouchableOpacity>
+
+          </View>
+        </View>
+      </Modal>
+
     </View>
   );
 }
@@ -125,46 +200,146 @@ export default function Eventos() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#f5f5f5',
+    padding: Spacing.lg,
+    backgroundColor: Colors.background,
   },
+
+  header: {
+    backgroundColor: Colors.primary,
+    padding: Spacing.md,
+    borderRadius: Radius.md,
+    marginBottom: Spacing.md,
+  },
+
   title: {
     fontSize: 22,
     fontWeight: 'bold',
+    color: Colors.white,
+    textAlign: 'center',
   },
+
   input: {
-    backgroundColor: '#fff',
-    padding: 10,
-    marginVertical: 5,
-    borderRadius: 8,
+    backgroundColor: Colors.white,
+    padding: Spacing.md,
+    borderRadius: Radius.sm,
+    marginVertical: Spacing.xs,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    color: Colors.text,
   },
+
+  status: {
+    marginVertical: 6,
+    color: Colors.muted,
+  },
+
+  button: {
+    backgroundColor: Colors.primary,
+    padding: Spacing.md,
+    borderRadius: Radius.sm,
+    marginTop: Spacing.xs,
+    alignItems: 'center',
+  },
+
+  buttonPrimary: {
+    backgroundColor: Colors.primary,
+    padding: Spacing.md,
+    borderRadius: Radius.md,
+    marginTop: Spacing.sm,
+    alignItems: 'center',
+  },
+
+  buttonSecondary: {
+    backgroundColor: Colors.accent,
+    padding: Spacing.md,
+    borderRadius: Radius.sm,
+    marginTop: Spacing.xs,
+    alignItems: 'center',
+  },
+
+  buttonDanger: {
+    backgroundColor: '#c94c4c',
+    padding: Spacing.md,
+    borderRadius: Radius.sm,
+    marginTop: Spacing.sm,
+    alignItems: 'center',
+  },
+
+  buttonText: {
+    color: Colors.white,
+    fontWeight: 'bold',
+  },
+
+  buttonTextSecondary: {
+    color: Colors.text,
+    fontWeight: 'bold',
+  },
+
   card: {
-    backgroundColor: '#fff',
-    padding: 15,
-    marginTop: 10,
-    borderRadius: 10,
+    backgroundColor: Colors.white,
+    padding: Spacing.md,
+    borderRadius: Radius.md,
+    marginTop: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
+
   name: {
     fontSize: 18,
     fontWeight: 'bold',
+    color: Colors.primary,
   },
+
+  text: {
+    color: Colors.text,
+  },
+
+  date: {
+    marginTop: 6,
+    color: Colors.muted,
+  },
+
   actions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 10,
   },
-  image: {
-    width: '100%',
-    height: 150,
-    borderRadius: 8,
-    marginBottom: 10,
+
+  smallButton: {
+    backgroundColor: Colors.primary,
+    padding: Spacing.sm,
+    borderRadius: Radius.sm,
   },
-  placeholder: {
-    height: 150,
+
+  smallButtonDanger: {
+    backgroundColor: '#c94c4c',
+    padding: Spacing.sm,
+    borderRadius: Radius.sm,
+  },
+
+  smallButtonText: {
+    color: Colors.white,
+    fontWeight: 'bold',
+  },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#eee',
-    borderRadius: 8,
-    marginBottom: 10,
+    padding: Spacing.lg,
+  },
+
+  modalContent: {
+    backgroundColor: Colors.background,
+    padding: Spacing.lg,
+    borderRadius: Radius.lg,
+  },
+
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: Colors.primary,
+    marginBottom: Spacing.md,
+    textAlign: 'center',
   },
 });

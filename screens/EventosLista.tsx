@@ -1,5 +1,4 @@
 import React from 'react';
-
 import {
   View,
   Text,
@@ -9,6 +8,7 @@ import {
 } from 'react-native';
 
 import { useEventosLogic } from '../hooks/useEventoLogic';
+import { Colors, Radius, Spacing } from '../styles/theme';
 
 export default function EventosLista() {
   const { eventos } = useEventosLogic();
@@ -16,34 +16,34 @@ export default function EventosLista() {
   return (
     <View style={styles.container}>
 
-      <Text style={styles.title}>
-        Eventos Marcados
-      </Text>
+      {/* HEADER */}
+      <View style={styles.header}>
+        <Text style={styles.title}>Eventos Marcados</Text>
+      </View>
 
+      {/* LISTA */}
       <FlatList
         data={eventos}
         keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.listContent}
         renderItem={({ item }) => (
           <View style={styles.card}>
 
             {item.imageUrl ? (
-              <Image
-                source={{ uri: item.imageUrl }}
-                style={styles.image}
-              />
+              <Image source={{ uri: item.imageUrl }} style={styles.image} />
             ) : (
               <View style={styles.placeholder}>
-                <Text>Sem imagem</Text>
+                <Text style={styles.placeholderText}>Sem imagem</Text>
               </View>
             )}
 
-            <Text style={styles.name}>
-              {item.title}
+            <Text style={styles.name}>{item.title}</Text>
+            <Text style={styles.text}>{item.descricao}</Text>
+            <Text style={styles.text}>Local: {item.local}</Text>
+
+            <Text style={styles.date}>
+              {new Date(item.data).toLocaleDateString('pt-BR')}
             </Text>
-
-            <Text>{item.descricao}</Text>
-
-            <Text>{item.local}</Text>
 
           </View>
         )}
@@ -54,43 +54,72 @@ export default function EventosLista() {
 }
 
 const styles = StyleSheet.create({
-
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#f5f5f5',
+    padding: Spacing.lg,
+    backgroundColor: Colors.background,
+  },
+
+  header: {
+    backgroundColor: Colors.primary,
+    padding: Spacing.md,
+    borderRadius: Radius.md,
+    marginBottom: Spacing.md,
   },
 
   title: {
     fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 10,
+    color: Colors.white,
+    textAlign: 'center',
+  },
+
+  listContent: {
+    paddingBottom: Spacing.lg,
   },
 
   card: {
-    backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
+    backgroundColor: Colors.white,
+    padding: Spacing.md,
+    borderRadius: Radius.md,
+    marginBottom: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
 
   image: {
     width: '100%',
     height: 200,
-    marginBottom: 10,
+    borderRadius: Radius.sm,
+    marginBottom: Spacing.sm,
   },
 
   placeholder: {
     height: 200,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#eee',
-    marginBottom: 10,
+    backgroundColor: Colors.accent,
+    borderRadius: Radius.sm,
+    marginBottom: Spacing.sm,
+  },
+
+  placeholderText: {
+    color: Colors.muted,
+    fontWeight: '600',
   },
 
   name: {
     fontSize: 18,
     fontWeight: 'bold',
+    color: Colors.primary,
   },
 
+  text: {
+    color: Colors.text,
+  },
+
+  date: {
+    marginTop: Spacing.xs,
+    color: Colors.muted,
+  },
 });

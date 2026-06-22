@@ -17,19 +17,14 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../App';
 import { useLoginLogic } from '../hooks/useLoginLogic';
 
+import { Colors, Radius, Spacing } from '../styles/theme';
+
 type LoginScreenProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
 
 export default function Login() {
   const navigation = useNavigation<LoginScreenProp>();
 
-  const {
-    email,
-    setEmail,
-    senha,
-    setSenha,
-    logar,
-    carregando,
-  } = useLoginLogic();
+  const { email, setEmail, senha, setSenha, logar, carregando } = useLoginLogic();
 
   const handleLogin = () => {
     logar(() => {
@@ -45,15 +40,20 @@ export default function Login() {
       >
         <View style={styles.wrapper}>
           <View style={styles.card}>
-            <Text style={styles.title}>Login</Text>
 
+            {/* HEADER */}
+            <View style={styles.header}>
+              <Text style={styles.title}>Login</Text>
+            </View>
+
+            {/* INPUTS */}
             <TextInput
               placeholder="E-mail"
               autoCapitalize="none"
               keyboardType="email-address"
               value={email}
               onChangeText={setEmail}
-              placeholderTextColor="#999"
+              placeholderTextColor={Colors.muted}
               style={styles.input}
             />
 
@@ -62,43 +62,44 @@ export default function Login() {
               secureTextEntry
               value={senha}
               onChangeText={setSenha}
-              placeholderTextColor="#999"
+              placeholderTextColor={Colors.muted}
               style={styles.input}
             />
 
+            {/* BUTTON LOGIN */}
             <TouchableOpacity
-              style={[
-                styles.button,
-                carregando && { opacity: 0.6 },
-              ]}
+              style={[styles.button, carregando && styles.buttonDisabled]}
               onPress={handleLogin}
               disabled={carregando}
             >
               {carregando ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={Colors.white} />
               ) : (
                 <Text style={styles.buttonText}>Entrar</Text>
               )}
             </TouchableOpacity>
 
+            {/* LINKS */}
             <View style={styles.linksContainer}>
+
               <TouchableOpacity
-                style={[styles.outlineButton, { borderColor: '#007BFF' }]}
+                style={styles.outlineButton}
                 onPress={() => navigation.navigate('Register')}
               >
-                <Text style={[styles.outlineText, { color: '#007BFF' }]}>
+                <Text style={[styles.outlineText, { color: Colors.primary }]}>
                   Criar conta
                 </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.outlineButton, { borderColor: '#FF9500' }]}
+                style={styles.outlineButton}
                 onPress={() => navigation.navigate('RecuperaSenha')}
               >
-                <Text style={[styles.outlineText, { color: '#FF9500' }]}>
+                <Text style={[styles.outlineText, { color: Colors.muted }]}>
                   Esqueceu a senha?
                 </Text>
               </TouchableOpacity>
+
             </View>
 
           </View>
@@ -111,67 +112,81 @@ export default function Login() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: Colors.background,
   },
+
   wrapper: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: Spacing.lg,
   },
+
   card: {
     width: '100%',
     maxWidth: 400,
-    backgroundColor: '#fff',
-    padding: 24,
-    borderRadius: 12,
-
-    // sombra iOS
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-
-    // sombra Android
-    elevation: 5,
+    backgroundColor: Colors.white,
+    padding: Spacing.lg,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
+
+  header: {
+    backgroundColor: Colors.primary,
+    padding: Spacing.md,
+    borderRadius: Radius.md,
+    marginBottom: Spacing.md,
+  },
+
   title: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 20,
-    color: '#333',
+    color: Colors.white,
   },
+
   input: {
-    backgroundColor: '#f9f9f9',
+    backgroundColor: Colors.white,
     borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 12,
-    color: '#333',
+    borderColor: Colors.border,
+    padding: Spacing.md,
+    borderRadius: Radius.sm,
+    marginBottom: Spacing.sm,
+    color: Colors.text,
   },
+
   button: {
-    backgroundColor: '#28A745',
-    padding: 14,
-    borderRadius: 8,
+    backgroundColor: Colors.primary,
+    padding: Spacing.md,
+    borderRadius: Radius.md,
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: Spacing.sm,
   },
+
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+
   buttonText: {
-    color: '#fff',
+    color: Colors.white,
     fontWeight: 'bold',
   },
+
   linksContainer: {
-    marginTop: 12,
-    gap: 10,
+    marginTop: Spacing.md,
+    gap: Spacing.sm,
   },
+
   outlineButton: {
     borderWidth: 1,
-    padding: 12,
-    borderRadius: 8,
+    borderColor: Colors.border,
+    padding: Spacing.md,
+    borderRadius: Radius.md,
     alignItems: 'center',
+    backgroundColor: Colors.background,
   },
+
   outlineText: {
     fontWeight: '600',
   },
