@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Alert } from 'react-native';
-
 import { auth, db } from '../firebase';
 import {
   collection,
@@ -12,9 +11,7 @@ import {
   updateDoc,
   deleteDoc,
 } from 'firebase/firestore';
-
 import * as ImagePicker from 'expo-image-picker';
-
 import { evento } from '../types/evento';
 
 export function useEventosLogic() {
@@ -38,7 +35,7 @@ export function useEventosLogic() {
 
   const eventosCollectionRef = collection(db, 'eventos');
 
-  // ✅ IMG BB KEY (correto no Expo)
+  // IMG BB KEY
   const IMGBB_API_KEY = process.env.EXPO_PUBLIC_IMGBB_API_KEY!;
 
   // LISTENER
@@ -171,14 +168,14 @@ export function useEventosLogic() {
     try {
       setUploading(true);
 
+      const formData = new FormData();
+      formData.append('image', imageBase64);
+
       const response = await fetch(
         `https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,
         {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: `image=${encodeURIComponent(imageBase64)}`,
+          body: formData,
         }
       );
 
@@ -192,7 +189,8 @@ export function useEventosLogic() {
         Alert.alert('Imagem enviada com sucesso');
         setImageBase64(null);
       } else {
-        Alert.alert('Erro no upload da imagem');
+        console.error("Erro da API ImgBB:", json);
+        Alert.alert('Erro no upload da imagem', json.error?.message || 'Erro desconhecido');
       }
     } catch (err) {
       console.error(err);
@@ -204,28 +202,22 @@ export function useEventosLogic() {
 
   return {
     eventos,
-
     title,
     setTitle,
     descricao,
     setDescricao,
     local,
     setLocal,
-
     data,
     setData,
-
     isDatePickerVisible,
     abrirDatePicker,
     fecharDatePicker,
     confirmarData,
-
     editingId,
-
     adicionarEvento,
     deletarEvento,
     iniciarEdicao,
-
     processarImagem,
     uploadImagemEvento,
     uploading,
