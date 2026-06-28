@@ -1,12 +1,12 @@
 import React from 'react';
 import {
-  View,
   Text,
   TextInput,
   FlatList,
   StyleSheet,
   Modal,
   TouchableOpacity,
+  View,
 } from 'react-native';
 
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
@@ -40,77 +40,105 @@ export default function Eventos() {
   } = useEventosLogic();
 
   return (
-    <View style={styles.container}>
-
-      <HeaderImage />
-
-      <View style={styles.header}>
-        <Text style={styles.title}>Eventos</Text>
-      </View>
-
-      <TextInput
-        style={styles.input}
-        placeholder="Título"
-        placeholderTextColor={Colors.muted}
-        value={title}
-        onChangeText={setTitle}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Descrição"
-        placeholderTextColor={Colors.muted}
-        value={descricao}
-        onChangeText={setDescricao}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Local"
-        placeholderTextColor={Colors.muted}
-        value={local}
-        onChangeText={setLocal}
-      />
-
-      <TouchableOpacity style={styles.button} onPress={abrirDatePicker}>
-        <Text style={styles.buttonText}>Selecionar data</Text>
-      </TouchableOpacity>
-
-      <Text style={styles.status}>
-        {data ? `Data: ${data.toLocaleDateString('pt-BR')}` : 'Nenhuma data selecionada'}
-      </Text>
-
-      <TouchableOpacity
-        style={styles.buttonSecondary}
-        onPress={() => processarImagem('galeria')}
-      >
-        <Text style={styles.buttonTextSecondary}>Selecionar imagem</Text>
-      </TouchableOpacity>
-
-      <Text style={styles.status}>
-        {imageUri ? 'Imagem selecionada' : 'Nenhuma imagem selecionada'}
-      </Text>
-
-      <TouchableOpacity style={styles.buttonPrimary} onPress={adicionarEvento}>
-        <Text style={styles.buttonText}>
-          {uploading ? 'Salvando...' : 'Criar evento'}
-        </Text>
-      </TouchableOpacity>
-
-      <DateTimePickerModal
-        isVisible={isDatePickerVisible}
-        mode="date"
-        onConfirm={confirmarData}
-        onCancel={fecharDatePicker}
-      />
-
+    <>
       <FlatList
+        style={styles.container}
+        contentContainerStyle={styles.contentContainer}
         data={eventos}
         keyExtractor={(item) => item.id}
+
+        ListHeaderComponent={
+          <>
+            <HeaderImage />
+
+            <View style={styles.header}>
+              <Text style={styles.title}>
+                Marcar Evento
+              </Text>
+            </View>
+
+            <TextInput
+              style={styles.input}
+              placeholder="Título"
+              placeholderTextColor={Colors.muted}
+              value={title}
+              onChangeText={setTitle}
+            />
+
+            <TextInput
+              style={styles.input}
+              placeholder="Descrição"
+              placeholderTextColor={Colors.muted}
+              value={descricao}
+              onChangeText={setDescricao}
+            />
+
+            <TextInput
+              style={styles.input}
+              placeholder="Local"
+              placeholderTextColor={Colors.muted}
+              value={local}
+              onChangeText={setLocal}
+            />
+
+            <View style={styles.addDataImage}>
+
+              <TouchableOpacity
+                style={styles.button}
+                onPress={abrirDatePicker}
+              >
+                <Text style={styles.buttonText}>
+                  Selecionar data
+                </Text>
+              </TouchableOpacity>
+
+              <Text style={styles.status}>
+                {data
+                  ? `Data: ${data.toLocaleDateString('pt-BR')}`
+                  : 'Nenhuma data selecionada'}
+              </Text>
+
+              <TouchableOpacity
+                style={styles.buttonSecondary}
+                onPress={() => processarImagem('galeria')}
+              >
+                <Text style={styles.buttonTextSecondary}>
+                  Selecionar imagem
+                </Text>
+              </TouchableOpacity>
+
+              <Text style={styles.status}>
+                {imageUri
+                  ? 'Imagem selecionada'
+                  : 'Nenhuma imagem selecionada'}
+              </Text>
+
+            </View>
+
+            <TouchableOpacity
+              style={styles.buttonPrimary}
+              onPress={adicionarEvento}
+            >
+              <Text style={styles.buttonText}>
+                {uploading ? 'Salvando...' : 'Criar evento'}
+              </Text>
+            </TouchableOpacity>
+
+            <DateTimePickerModal
+              isVisible={isDatePickerVisible}
+              mode="date"
+              onConfirm={confirmarData}
+              onCancel={fecharDatePicker}
+            />
+          </>
+        }
+
         renderItem={({ item }) => (
           <View style={styles.card}>
 
-            <Text style={styles.name}>{item.title}</Text>
+            <Text style={styles.name}>
+              {item.title}
+            </Text>
 
             <Text style={styles.text}>
               {item.descricao}
@@ -121,7 +149,8 @@ export default function Eventos() {
             </Text>
 
             <Text style={styles.date}>
-              {new Date(item.data).toLocaleDateString('pt-BR')}
+              {new Date(item.data)
+                .toLocaleDateString('pt-BR')}
             </Text>
 
             <View style={styles.actions}>
@@ -150,7 +179,11 @@ export default function Eventos() {
         )}
       />
 
-      <Modal visible={isEditModalVisible} animationType="slide" transparent>
+      <Modal
+        visible={isEditModalVisible}
+        animationType="slide"
+        transparent
+      >
 
         <View style={styles.modalOverlay}>
 
@@ -184,7 +217,10 @@ export default function Eventos() {
               placeholderTextColor={Colors.muted}
             />
 
-            <TouchableOpacity style={styles.button} onPress={abrirDatePicker}>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={abrirDatePicker}
+            >
               <Text style={styles.buttonText}>
                 Selecionar data
               </Text>
@@ -208,7 +244,10 @@ export default function Eventos() {
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.buttonDanger} onPress={fecharEdicao}>
+            <TouchableOpacity
+              style={styles.buttonDanger}
+              onPress={fecharEdicao}
+            >
               <Text style={styles.buttonText}>
                 Cancelar
               </Text>
@@ -220,14 +259,13 @@ export default function Eventos() {
 
       </Modal>
 
-    </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: Spacing.lg,
     backgroundColor: Colors.background,
   },
 
@@ -262,14 +300,15 @@ const styles = StyleSheet.create({
 
   button: {
     backgroundColor: Colors.primary,
-    padding: Spacing.md,
+    height: 30,
+    width: 150,
     borderRadius: Radius.sm,
     marginTop: Spacing.xs,
     alignItems: 'center',
   },
 
   buttonPrimary: {
-    backgroundColor: Colors.primary,
+    backgroundColor: "#7597f4",
     padding: Spacing.md,
     borderRadius: Radius.md,
     marginTop: Spacing.sm,
@@ -277,8 +316,9 @@ const styles = StyleSheet.create({
   },
 
   buttonSecondary: {
-    backgroundColor: Colors.accent,
-    padding: Spacing.md,
+    backgroundColor: Colors.primary,
+     height: 30,
+    width: 150,
     borderRadius: Radius.sm,
     marginTop: Spacing.xs,
     alignItems: 'center',
@@ -293,12 +333,14 @@ const styles = StyleSheet.create({
   },
 
   buttonText: {
+    marginTop:5,
     color: Colors.white,
     fontWeight: 'bold',
   },
 
   buttonTextSecondary: {
-    color: Colors.text,
+    marginTop:5,
+    color: "#ffffff",
     fontWeight: 'bold',
   },
 
@@ -328,6 +370,12 @@ const styles = StyleSheet.create({
 
   actions: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+
+  addDataImage: {
+    flexDirection: 'column',
     justifyContent: 'space-between',
     marginTop: 10,
   },
@@ -369,4 +417,9 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
     textAlign: 'center',
   },
+  contentContainer: {
+  padding: Spacing.lg,
+  paddingBottom: 40,
+  },
+
 });

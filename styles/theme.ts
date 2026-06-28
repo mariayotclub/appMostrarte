@@ -1,10 +1,11 @@
 export const Colors = {
-  primary: '#8BA6AC',
+  primary: '#fed175',
   secondary: '#D7D7B8',
   accent: '#E5E6C9',
   background: '#F8F8EC',
   surface: '#E5E6C9',
   border: '#BDCDD0',
+  
 
   text: '#8BA6AC',
   muted: '#6F8A90',

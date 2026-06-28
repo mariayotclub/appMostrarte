@@ -39,14 +39,14 @@ export default function Login() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
       >
-        <View style={styles.wrapper}>
-          <View style={styles.card}>
-
-            <Image
+        <Image
               source={require('../assets/logo.png')}
               style={styles.logo}
               resizeMode="contain"
             />
+            
+        <View style={styles.wrapper}>
+          <View style={styles.card}>
 
             <View style={styles.header}>
               <Text style={styles.title}>Login</Text>
@@ -89,7 +89,7 @@ export default function Login() {
                 style={styles.outlineButton}
                 onPress={() => navigation.navigate('Register')}
               >
-                <Text style={[styles.outlineText, { color: Colors.primary }]}>
+                <Text style={[styles.outlineText, { color: Colors.muted }]}>
                   Criar conta
                 </Text>
               </TouchableOpacity>
@@ -122,12 +122,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: Spacing.lg,
+    marginBottom:80,
+    padding: 20,
   },
 
   card: {
     width: '100%',
-    maxWidth: 400,
+    maxWidth: 300,
     backgroundColor: Colors.white,
     padding: Spacing.lg,
     borderRadius: Radius.lg,
@@ -136,14 +137,14 @@ const styles = StyleSheet.create({
   },
 
   logo: {
-    width: 220,
-    height: 100,
+    width: 300,
+    height: 150,
     alignSelf: 'center',
-    marginBottom: Spacing.md,
+    marginTop: 110,
+    
   },
 
   header: {
-    backgroundColor: Colors.primary,
     padding: Spacing.md,
     borderRadius: Radius.md,
     marginBottom: Spacing.md,
@@ -153,7 +154,7 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontWeight: 'bold',
     textAlign: 'center',
-    color: Colors.white,
+    color: Colors.primary,
   },
 
   input: {

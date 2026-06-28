@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 import {
   View,
@@ -6,6 +6,8 @@ import {
   FlatList,
   Image,
   StyleSheet,
+  Modal,
+  TouchableOpacity,
 } from 'react-native';
 
 import { useEventosLogic } from '../hooks/useEventoLogic';
@@ -13,21 +15,26 @@ import HeaderImage from '../components/HeaderImage';
 
 import { Colors, Radius, Spacing } from '../styles/theme';
 
-
 export default function EventosLista() {
   const { eventos } = useEventosLogic();
+
+  const [modalVisible, setModalVisible] = useState(false);
+  const [eventoSelecionado, setEventoSelecionado] = useState<any>(null);
+
+  function abrirDescricao(evento: any) {
+    setEventoSelecionado(evento);
+    setModalVisible(true);
+  }
 
   return (
     <View style={styles.container}>
 
       <HeaderImage />
 
-      {/* HEADER */}
       <View style={styles.header}>
         <Text style={styles.title}>Eventos Marcados</Text>
       </View>
 
-      {/* LISTA */}
       <FlatList
         data={eventos}
         keyExtractor={(item) => item.id}
@@ -53,10 +60,6 @@ export default function EventosLista() {
             </Text>
 
             <Text style={styles.text}>
-              {item.descricao}
-            </Text>
-
-            <Text style={styles.text}>
               Local: {item.local}
             </Text>
 
@@ -64,14 +67,52 @@ export default function EventosLista() {
               {new Date(item.data).toLocaleDateString('pt-BR')}
             </Text>
 
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => abrirDescricao(item)}
+            >
+              <Text style={styles.buttonText}>
+                Ver descrição
+              </Text>
+            </TouchableOpacity>
+
           </View>
         )}
       />
 
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalBackground}>
+          <View style={styles.modalContainer}>
+
+            <Text style={styles.modalTitle}>
+              Descrição
+            </Text>
+
+            <Text style={styles.modalDescription}>
+              {eventoSelecionado?.descricao}
+            </Text>
+
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setModalVisible(false)}
+            >
+              <Text style={styles.buttonText}>
+                Fechar
+              </Text>
+            </TouchableOpacity>
+
+          </View>
+        </View>
+      </Modal>
+
     </View>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: {
@@ -141,5 +182,56 @@ const styles = StyleSheet.create({
   date: {
     marginTop: Spacing.xs,
     color: Colors.muted,
+  },
+
+  button: {
+    backgroundColor: Colors.primary,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: Radius.sm,
+    alignSelf: 'flex-end',
+    marginTop: Spacing.sm,
+  },
+
+  buttonText: {
+    color: Colors.white,
+    fontWeight: 'bold',
+    fontSize: 12,
+  },
+
+  modalBackground: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.lg,
+  },
+
+  modalContainer: {
+    width: '100%',
+    backgroundColor: Colors.white,
+    padding: Spacing.lg,
+    borderRadius: Radius.md,
+  },
+
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: Colors.primary,
+    marginBottom: Spacing.md,
+    textAlign: 'center',
+  },
+
+  modalDescription: {
+    color: Colors.text,
+    fontSize: 16,
+    marginBottom: Spacing.lg,
+  },
+
+  closeButton: {
+    backgroundColor: Colors.primary,
+    padding: Spacing.sm,
+    borderRadius: Radius.sm,
+    alignItems: 'center',
   },
 });
