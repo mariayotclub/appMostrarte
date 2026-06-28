@@ -11,6 +11,7 @@ import {
 
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { useEventosLogic } from '../hooks/useEventoLogic';
+import HeaderImage from '../components/HeaderImage';
 
 import { Colors, Radius, Spacing } from '../styles/theme';
 
@@ -41,12 +42,12 @@ export default function Eventos() {
   return (
     <View style={styles.container}>
 
-      {/* HEADER */}
+      <HeaderImage />
+
       <View style={styles.header}>
         <Text style={styles.title}>Eventos</Text>
       </View>
 
-      {/* CREATE FORM */}
       <TextInput
         style={styles.input}
         placeholder="Título"
@@ -91,7 +92,9 @@ export default function Eventos() {
       </Text>
 
       <TouchableOpacity style={styles.buttonPrimary} onPress={adicionarEvento}>
-        <Text style={styles.buttonText}> {uploading ? 'Salvando...' : 'Criar evento'} </Text>
+        <Text style={styles.buttonText}>
+          {uploading ? 'Salvando...' : 'Criar evento'}
+        </Text>
       </TouchableOpacity>
 
       <DateTimePickerModal
@@ -101,44 +104,61 @@ export default function Eventos() {
         onCancel={fecharDatePicker}
       />
 
-      {/* LISTA */}
       <FlatList
         data={eventos}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.card}>
+
             <Text style={styles.name}>{item.title}</Text>
-            <Text style={styles.text}>{item.descricao}</Text>
-            <Text style={styles.text}>Local: {item.local}</Text>
+
+            <Text style={styles.text}>
+              {item.descricao}
+            </Text>
+
+            <Text style={styles.text}>
+              Local: {item.local}
+            </Text>
+
             <Text style={styles.date}>
               {new Date(item.data).toLocaleDateString('pt-BR')}
             </Text>
 
             <View style={styles.actions}>
+
               <TouchableOpacity
                 style={styles.smallButton}
                 onPress={() => iniciarEdicao(item)}
               >
-                <Text style={styles.smallButtonText}>Editar</Text>
+                <Text style={styles.smallButtonText}>
+                  Editar
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.smallButtonDanger}
                 onPress={() => deletarEvento(item.id)}
               >
-                <Text style={styles.smallButtonText}>Excluir</Text>
+                <Text style={styles.smallButtonText}>
+                  Excluir
+                </Text>
               </TouchableOpacity>
+
             </View>
+
           </View>
         )}
       />
 
-      {/* MODAL */}
       <Modal visible={isEditModalVisible} animationType="slide" transparent>
+
         <View style={styles.modalOverlay}>
+
           <View style={styles.modalContent}>
 
-            <Text style={styles.modalTitle}>Editar Evento</Text>
+            <Text style={styles.modalTitle}>
+              Editar Evento
+            </Text>
 
             <TextInput
               style={styles.input}
@@ -165,32 +185,39 @@ export default function Eventos() {
             />
 
             <TouchableOpacity style={styles.button} onPress={abrirDatePicker}>
-              <Text style={styles.buttonText}>Selecionar data</Text>
+              <Text style={styles.buttonText}>
+                Selecionar data
+              </Text>
             </TouchableOpacity>
-
-            <Text style={styles.status}>
-              {data ? data.toLocaleDateString('pt-BR') : 'Nenhuma data'}
-            </Text>
 
             <TouchableOpacity
               style={styles.buttonSecondary}
               onPress={() => processarImagem('galeria')}
             >
-              <Text style={styles.buttonTextSecondary}>Selecionar imagem</Text>
+              <Text style={styles.buttonTextSecondary}>
+                Selecionar imagem
+              </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.buttonPrimary} onPress={adicionarEvento}>
+            <TouchableOpacity
+              style={styles.buttonPrimary}
+              onPress={adicionarEvento}
+            >
               <Text style={styles.buttonText}>
                 {uploading ? 'Salvando...' : 'Salvar'}
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.buttonDanger} onPress={fecharEdicao}>
-              <Text style={styles.buttonText}>Cancelar</Text>
+              <Text style={styles.buttonText}>
+                Cancelar
+              </Text>
             </TouchableOpacity>
 
           </View>
+
         </View>
+
       </Modal>
 
     </View>

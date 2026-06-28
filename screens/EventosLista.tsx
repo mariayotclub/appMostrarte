@@ -1,4 +1,5 @@
 import React from 'react';
+
 import {
   View,
   Text,
@@ -8,13 +9,18 @@ import {
 } from 'react-native';
 
 import { useEventosLogic } from '../hooks/useEventoLogic';
+import HeaderImage from '../components/HeaderImage';
+
 import { Colors, Radius, Spacing } from '../styles/theme';
+
 
 export default function EventosLista() {
   const { eventos } = useEventosLogic();
 
   return (
     <View style={styles.container}>
+
+      <HeaderImage />
 
       {/* HEADER */}
       <View style={styles.header}>
@@ -30,16 +36,29 @@ export default function EventosLista() {
           <View style={styles.card}>
 
             {item.imageUrl ? (
-              <Image source={{ uri: item.imageUrl }} style={styles.image} />
+              <Image
+                source={{ uri: item.imageUrl }}
+                style={styles.image}
+              />
             ) : (
               <View style={styles.placeholder}>
-                <Text style={styles.placeholderText}>Sem imagem</Text>
+                <Text style={styles.placeholderText}>
+                  Sem imagem
+                </Text>
               </View>
             )}
 
-            <Text style={styles.name}>{item.title}</Text>
-            <Text style={styles.text}>{item.descricao}</Text>
-            <Text style={styles.text}>Local: {item.local}</Text>
+            <Text style={styles.name}>
+              {item.title}
+            </Text>
+
+            <Text style={styles.text}>
+              {item.descricao}
+            </Text>
+
+            <Text style={styles.text}>
+              Local: {item.local}
+            </Text>
 
             <Text style={styles.date}>
               {new Date(item.data).toLocaleDateString('pt-BR')}
@@ -52,6 +71,7 @@ export default function EventosLista() {
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {

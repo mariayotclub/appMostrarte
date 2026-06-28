@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 
 import { useNavigation } from '@react-navigation/native';
@@ -41,12 +42,16 @@ export default function Login() {
         <View style={styles.wrapper}>
           <View style={styles.card}>
 
-            {/* HEADER */}
+            <Image
+              source={require('../assets/logo.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+
             <View style={styles.header}>
               <Text style={styles.title}>Login</Text>
             </View>
 
-            {/* INPUTS */}
             <TextInput
               placeholder="E-mail"
               autoCapitalize="none"
@@ -66,7 +71,6 @@ export default function Login() {
               style={styles.input}
             />
 
-            {/* BUTTON LOGIN */}
             <TouchableOpacity
               style={[styles.button, carregando && styles.buttonDisabled]}
               onPress={handleLogin}
@@ -79,7 +83,6 @@ export default function Login() {
               )}
             </TouchableOpacity>
 
-            {/* LINKS */}
             <View style={styles.linksContainer}>
 
               <TouchableOpacity
@@ -130,6 +133,13 @@ const styles = StyleSheet.create({
     borderRadius: Radius.lg,
     borderWidth: 1,
     borderColor: Colors.border,
+  },
+
+  logo: {
+    width: 220,
+    height: 100,
+    alignSelf: 'center',
+    marginBottom: Spacing.md,
   },
 
   header: {
