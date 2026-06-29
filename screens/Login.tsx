@@ -25,11 +25,23 @@ type LoginScreenProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
 export default function Login() {
   const navigation = useNavigation<LoginScreenProp>();
 
-  const { email, setEmail, senha, setSenha, logar, carregando } = useLoginLogic();
+  const {
+    email,
+    setEmail,
+    senha,
+    setSenha,
+    logar,
+    carregando,
+  } = useLoginLogic();
 
   const handleLogin = () => {
-    logar(() => {
-      navigation.replace('Main');
+    logar((admin: boolean) => {
+      // 🔥 navegação baseada no tipo de usuário
+      if (admin) {
+        navigation.replace('Main'); // ou 'Admin' se tiver tela separada
+      } else {
+        navigation.replace('Main');
+      }
     });
   };
 
@@ -40,14 +52,13 @@ export default function Login() {
         style={{ flex: 1 }}
       >
         <Image
-              source={require('../assets/logo.png')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
-            
+          source={require('../assets/logo.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+
         <View style={styles.wrapper}>
           <View style={styles.card}>
-
             <View style={styles.header}>
               <Text style={styles.title}>Login</Text>
             </View>
@@ -84,7 +95,6 @@ export default function Login() {
             </TouchableOpacity>
 
             <View style={styles.linksContainer}>
-
               <TouchableOpacity
                 style={styles.outlineButton}
                 onPress={() => navigation.navigate('Register')}
@@ -102,9 +112,7 @@ export default function Login() {
                   Esqueceu a senha?
                 </Text>
               </TouchableOpacity>
-
             </View>
-
           </View>
         </View>
       </KeyboardAvoidingView>

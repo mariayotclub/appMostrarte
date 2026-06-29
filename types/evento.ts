@@ -5,6 +5,7 @@ export type evento = {
   imageUrl: string;
   data: string;
   local: string;
+  organizador: string;
   userId: string;
   createdAt: string;
 };

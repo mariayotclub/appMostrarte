@@ -1,12 +1,14 @@
 import React from 'react';
+
 import {
   Text,
   TextInput,
-  FlatList,
   StyleSheet,
+  FlatList,
   Modal,
   TouchableOpacity,
   View,
+  Alert,
 } from 'react-native';
 
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
@@ -14,6 +16,7 @@ import { useEventosLogic } from '../hooks/useEventoLogic';
 import HeaderImage from '../components/HeaderImage';
 
 import { Colors, Radius, Spacing } from '../styles/theme';
+import { auth } from '../firebase';
 
 export default function Eventos() {
   const {
@@ -24,6 +27,8 @@ export default function Eventos() {
     setDescricao,
     local,
     setLocal,
+    organizador,
+    setOrganizador,
     data,
     isDatePickerVisible,
     abrirDatePicker,
@@ -37,28 +42,46 @@ export default function Eventos() {
     uploading,
     isEditModalVisible,
     fecharEdicao,
+    isAdmin,
   } = useEventosLogic();
+
+  const meusEventos = eventos.filter(
+    (item) => item.userId === auth.currentUser?.uid
+  );
+
+  const eventosVisiveis = isAdmin ? eventos : meusEventos;
+
+  function confirmarExclusao(id: string) {
+    Alert.alert(
+      'Confirmação',
+      'tem certeza que deseja apagar este evento?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Excluir',
+          style: 'destructive',
+          onPress: () => deletarEvento(id),
+        },
+      ]
+    );
+  }
 
   return (
     <>
-      <FlatList
-        style={styles.container}
+      <FlatList style={[styles.container,isAdmin && styles.adminContainer]}
         contentContainerStyle={styles.contentContainer}
-        data={eventos}
+        data={eventosVisiveis}
         keyExtractor={(item) => item.id}
-
         ListHeaderComponent={
           <>
             <HeaderImage />
 
-            <View style={styles.header}>
-              <Text style={styles.title}>
-                Marcar Evento
-              </Text>
+            <View style={[styles.header,isAdmin && styles.adminHeader]}>
+              <Text style={styles.title}>Criar Evento</Text>
             </View>
 
-            <TextInput
-              style={styles.input}
+            <TextInput 
+              style={[styles.input,isAdmin && styles.adminInput]}
               placeholder="Título"
               placeholderTextColor={Colors.muted}
               value={title}
@@ -66,7 +89,7 @@ export default function Eventos() {
             />
 
             <TextInput
-              style={styles.input}
+              style={[styles.input,isAdmin && styles.adminInput]}
               placeholder="Descrição"
               placeholderTextColor={Colors.muted}
               value={descricao}
@@ -74,49 +97,46 @@ export default function Eventos() {
             />
 
             <TextInput
-              style={styles.input}
+              style={[styles.input,isAdmin && styles.adminInput]}
               placeholder="Local"
               placeholderTextColor={Colors.muted}
               value={local}
               onChangeText={setLocal}
             />
 
-            <View style={styles.addDataImage}>
+            <TextInput
+              style={[styles.input,isAdmin && styles.adminInput]}
+              placeholder="Organizador"
+              placeholderTextColor={Colors.muted}
+              value={organizador}
+              onChangeText={setOrganizador}
+            />
 
-              <TouchableOpacity
-                style={styles.button}
-                onPress={abrirDatePicker}
-              >
-                <Text style={styles.buttonText}>
-                  Selecionar data
-                </Text>
-              </TouchableOpacity>
+            <TouchableOpacity style={[styles.button, isAdmin && styles.adminButton]} onPress={abrirDatePicker}>
+              <Text style={styles.buttonText}>Selecionar data</Text>
+            </TouchableOpacity>
 
-              <Text style={styles.status}>
-                {data
-                  ? `Data: ${data.toLocaleDateString('pt-BR')}`
-                  : 'Nenhuma data selecionada'}
-              </Text>
-
-              <TouchableOpacity
-                style={styles.buttonSecondary}
-                onPress={() => processarImagem('galeria')}
-              >
-                <Text style={styles.buttonTextSecondary}>
-                  Selecionar imagem
-                </Text>
-              </TouchableOpacity>
-
-              <Text style={styles.status}>
-                {imageUri
-                  ? 'Imagem selecionada'
-                  : 'Nenhuma imagem selecionada'}
-              </Text>
-
-            </View>
+            <Text style={styles.status}>
+              {data
+                ? `Data: ${data.toLocaleDateString('pt-BR')}`
+                : 'Nenhuma data selecionada'}
+            </Text>
 
             <TouchableOpacity
-              style={styles.buttonPrimary}
+              style={[styles.buttonSecondary, isAdmin && styles.adminButton]}
+              onPress={() => processarImagem('galeria')}
+            >
+              <Text style={styles.buttonTextSecondary}>
+                Selecionar imagem
+              </Text>
+            </TouchableOpacity>
+
+            <Text style={styles.status}>
+              {imageUri ? 'Imagem selecionada' : 'Nenhuma imagem selecionada'}
+            </Text>
+
+            <TouchableOpacity
+              style={[styles.buttonPrimary, isAdmin && styles.adminButton]}
               onPress={adicionarEvento}
             >
               <Text style={styles.buttonText}>
@@ -130,135 +150,145 @@ export default function Eventos() {
               onConfirm={confirmarData}
               onCancel={fecharDatePicker}
             />
+
+            <Text style={styles.subTitle}>
+              {isAdmin ? 'Todos os eventos' : 'Meus eventos'}
+            </Text>
           </>
         }
+        renderItem={({ item }) => {
+          const isOwner =
+            item.userId === auth.currentUser?.uid || isAdmin;
 
-        renderItem={({ item }) => (
-          <View style={styles.card}>
+          return (
+            <View style={[styles.card, isAdmin && styles.adminCard]}>
+              <Text style={[ styles.name, isAdmin && styles.adminText]}>{item.title}</Text>
 
-            <Text style={styles.name}>
-              {item.title}
-            </Text>
+              <Text style={[styles.text, isAdmin && styles.adminText]}>{item.descricao}</Text>
 
-            <Text style={styles.text}>
-              {item.descricao}
-            </Text>
+              <Text style={[styles.text, isAdmin && styles.adminText]}>Local: {item.local}</Text>
 
-            <Text style={styles.text}>
-              Local: {item.local}
-            </Text>
+              <Text style={styles.date}>
+                {item.data
+                  ? new Date(item.data).toLocaleDateString('pt-BR')
+                  : ''}
+              </Text>
 
-            <Text style={styles.date}>
-              {new Date(item.data)
-                .toLocaleDateString('pt-BR')}
-            </Text>
+              {isOwner && (
+                <View style={styles.actions}>
+                  <TouchableOpacity
+                    style={styles.smallButton}
+                    onPress={() => iniciarEdicao(item)}
+                  >
+                    <Text style={styles.smallButtonText}>Editar</Text>
+                  </TouchableOpacity>
 
-            <View style={styles.actions}>
-
-              <TouchableOpacity
-                style={styles.smallButton}
-                onPress={() => iniciarEdicao(item)}
-              >
-                <Text style={styles.smallButtonText}>
-                  Editar
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.smallButtonDanger}
-                onPress={() => deletarEvento(item.id)}
-              >
-                <Text style={styles.smallButtonText}>
-                  Excluir
-                </Text>
-              </TouchableOpacity>
-
+                  <TouchableOpacity
+                    style={styles.smallButtonDanger}
+                    onPress={() => confirmarExclusao(item.id)}
+                  >
+                    <Text style={styles.smallButtonText}>Excluir</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
             </View>
-
-          </View>
-        )}
+          );
+        }}
       />
 
-      <Modal
-        visible={isEditModalVisible}
-        animationType="slide"
-        transparent
+      {/* MODAL */}
+<Modal visible={isEditModalVisible} animationType="slide" transparent>
+  <View style={styles.modalOverlay}>
+    <View style={[styles.modalContent,isAdmin && styles.adminModalContent]}>
+
+      <Text style={[styles.modalTitle,isAdmin && styles.adminText]}>
+        Editar Evento
+      </Text>
+
+      <TextInput
+        style={[styles.input,isAdmin && styles.adminInput]}
+        placeholder="Título"
+        placeholderTextColor={Colors.muted}
+        value={title}
+        onChangeText={setTitle}
+      />
+
+      <TextInput
+        style={[styles.input,isAdmin && styles.adminInput]}
+        placeholder="Descrição"
+        placeholderTextColor={Colors.muted}
+        value={descricao}
+        onChangeText={setDescricao}
+      />
+
+      <TextInput
+        style={[styles.input,isAdmin && styles.adminInput]}
+        placeholder="Local"
+        placeholderTextColor={Colors.muted}
+        value={local}
+        onChangeText={setLocal}
+      />
+
+      <TextInput
+        style={[styles.input,isAdmin && styles.adminInput]}
+        placeholder="Organizador"
+        placeholderTextColor={Colors.muted}
+        value={organizador}
+        onChangeText={setOrganizador}
+      />
+
+      <TouchableOpacity
+        style={[styles.button,isAdmin && styles.adminButton]}
+        onPress={abrirDatePicker}
       >
+        <Text style={styles.buttonText}>
+          Alterar data
+        </Text>
+      </TouchableOpacity>
 
-        <View style={styles.modalOverlay}>
+      <Text style={styles.status}>
+        {data
+          ? `Data: ${data.toLocaleDateString('pt-BR')}`
+          : 'Nenhuma data selecionada'}
+      </Text>
 
-          <View style={styles.modalContent}>
+      <TouchableOpacity
+        style={[styles.buttonSecondary,isAdmin && styles.adminButton]}
+        onPress={() => processarImagem('galeria')}
+      >
+        <Text style={styles.buttonTextSecondary}>
+          Alterar imagem
+        </Text>
+      </TouchableOpacity>
 
-            <Text style={styles.modalTitle}>
-              Editar Evento
-            </Text>
+      <TouchableOpacity
+        style={[styles.buttonPrimary,isAdmin && styles.adminButton]}
+        onPress={adicionarEvento}
+      >
+        <Text style={styles.buttonText}>
+          Salvar alterações
+        </Text>
+      </TouchableOpacity>
 
-            <TextInput
-              style={styles.input}
-              value={title}
-              onChangeText={setTitle}
-              placeholder="Título"
-              placeholderTextColor={Colors.muted}
-            />
+      <TouchableOpacity
+        style={styles.buttonDanger}
+        onPress={fecharEdicao}
+      >
+        <Text style={styles.buttonText}>
+          Cancelar
+        </Text>
+      </TouchableOpacity>
 
-            <TextInput
-              style={styles.input}
-              value={descricao}
-              onChangeText={setDescricao}
-              placeholder="Descrição"
-              placeholderTextColor={Colors.muted}
-            />
+      <DateTimePickerModal
+        isVisible={isDatePickerVisible}
+        mode="date"
+        onConfirm={confirmarData}
+        onCancel={fecharDatePicker}
+      />
 
-            <TextInput
-              style={styles.input}
-              value={local}
-              onChangeText={setLocal}
-              placeholder="Local"
-              placeholderTextColor={Colors.muted}
-            />
-
-            <TouchableOpacity
-              style={styles.button}
-              onPress={abrirDatePicker}
-            >
-              <Text style={styles.buttonText}>
-                Selecionar data
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.buttonSecondary}
-              onPress={() => processarImagem('galeria')}
-            >
-              <Text style={styles.buttonTextSecondary}>
-                Selecionar imagem
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.buttonPrimary}
-              onPress={adicionarEvento}
-            >
-              <Text style={styles.buttonText}>
-                {uploading ? 'Salvando...' : 'Salvar'}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.buttonDanger}
-              onPress={fecharEdicao}
-            >
-              <Text style={styles.buttonText}>
-                Cancelar
-              </Text>
-            </TouchableOpacity>
-
-          </View>
-
-        </View>
-
-      </Modal>
-
+    </View>
+  </View>
+</Modal>
     </>
   );
 }
@@ -268,21 +298,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-
   header: {
     backgroundColor: Colors.primary,
     padding: Spacing.md,
     borderRadius: Radius.md,
     marginBottom: Spacing.md,
   },
-
   title: {
     fontSize: 22,
     fontWeight: 'bold',
     color: Colors.white,
     textAlign: 'center',
   },
-
   input: {
     backgroundColor: Colors.white,
     padding: Spacing.md,
@@ -292,12 +319,10 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     color: Colors.text,
   },
-
   status: {
     marginVertical: 6,
     color: Colors.muted,
   },
-
   button: {
     backgroundColor: Colors.primary,
     height: 30,
@@ -306,24 +331,21 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xs,
     alignItems: 'center',
   },
-
   buttonPrimary: {
-    backgroundColor: "#7597f4",
+    backgroundColor: '#7597f4',
     padding: Spacing.md,
     borderRadius: Radius.md,
     marginTop: Spacing.sm,
     alignItems: 'center',
   },
-
   buttonSecondary: {
     backgroundColor: Colors.primary,
-     height: 30,
+    height: 30,
     width: 150,
     borderRadius: Radius.sm,
     marginTop: Spacing.xs,
     alignItems: 'center',
   },
-
   buttonDanger: {
     backgroundColor: '#c94c4c',
     padding: Spacing.md,
@@ -331,19 +353,16 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
     alignItems: 'center',
   },
-
   buttonText: {
-    marginTop:5,
+    marginTop: 5,
     color: Colors.white,
     fontWeight: 'bold',
   },
-
   buttonTextSecondary: {
-    marginTop:5,
-    color: "#ffffff",
+    marginTop: 5,
+    color: '#ffffff',
     fontWeight: 'bold',
   },
-
   card: {
     backgroundColor: Colors.white,
     padding: Spacing.md,
@@ -352,64 +371,48 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
   },
-
   name: {
     fontSize: 18,
     fontWeight: 'bold',
     color: Colors.primary,
   },
-
   text: {
     color: Colors.text,
   },
-
   date: {
     marginTop: 6,
     color: Colors.muted,
   },
-
   actions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 10,
   },
-
-  addDataImage: {
-    flexDirection: 'column',
-    justifyContent: 'space-between',
-    marginTop: 10,
-  },
-
   smallButton: {
     backgroundColor: Colors.primary,
     padding: Spacing.sm,
     borderRadius: Radius.sm,
   },
-
   smallButtonDanger: {
     backgroundColor: '#c94c4c',
     padding: Spacing.sm,
     borderRadius: Radius.sm,
   },
-
   smallButtonText: {
     color: Colors.white,
     fontWeight: 'bold',
   },
-
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     padding: Spacing.lg,
   },
-
   modalContent: {
     backgroundColor: Colors.background,
     padding: Spacing.lg,
     borderRadius: Radius.lg,
   },
-
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
@@ -418,8 +421,49 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   contentContainer: {
-  padding: Spacing.lg,
-  paddingBottom: 40,
+    padding: Spacing.lg,
+    paddingBottom: 40,
   },
+  subTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.primary,
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  adminContainer: {
+ backgroundColor: '#1C2C4A',
+},
 
+adminHeader: {
+ backgroundColor: '#223559',
+ borderWidth: 1,
+ borderColor: '#667EA8',
+},
+
+adminInput: {
+ backgroundColor: '#223559',
+ color: '#FFFFFF',
+ borderColor: '#667EA8',
+},
+
+adminCard: {
+ backgroundColor: '#223559',
+ borderColor: '#667EA8',
+},
+
+adminText: {
+ color: '#FFFFFF',
+},
+
+adminButton: {
+ backgroundColor: '#16243D',
+ borderWidth: 1,
+ borderColor: '#667EA8',
+},
+adminModalContent: {
+  backgroundColor:'#223559',
+  borderWidth:1,
+  borderColor:'#667EA8',
+},
 });

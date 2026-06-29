@@ -7,21 +7,26 @@ import {
   addDoc,
   onSnapshot,
   query,
-  where,
   doc,
   updateDoc,
   deleteDoc,
+  orderBy,
 } from 'firebase/firestore';
 
 import * as ImagePicker from 'expo-image-picker';
 import { evento } from '../types/evento';
 
+import { getIdTokenResult } from 'firebase/auth';
+
 export function useEventosLogic() {
   const [eventos, setEventos] = useState<evento[]>([]);
+
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const [title, setTitle] = useState('');
   const [descricao, setDescricao] = useState('');
   const [local, setLocal] = useState('');
+  const [organizador, setOrganizador] = useState('');
 
   const [data, setData] = useState<Date | null>(null);
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
@@ -30,18 +35,28 @@ export function useEventosLogic() {
   const [uploading, setUploading] = useState(false);
 
   const [editingId, setEditingId] = useState<string | null>(null);
-
   const [isEditModalVisible, setEditModalVisible] = useState(false);
 
   const eventosCollectionRef = collection(db, 'eventos');
 
   const IMGBB_API_KEY = process.env.EXPO_PUBLIC_IMGBB_API_KEY!;
 
+  // 🔐 CHECAR ADMIN
   useEffect(() => {
-    const user = auth.currentUser;
-    if (!user) return;
+    const checkAdmin = async () => {
+      const user = auth.currentUser;
+      if (!user) return;
 
-    const q = query(eventosCollectionRef, where('userId', '==', user.uid));
+      const token = await getIdTokenResult(user);
+      setIsAdmin(token.claims.admin === true);
+    };
+
+    checkAdmin();
+  }, []);
+
+  // 📡 LISTA EVENTOS
+  useEffect(() => {
+    const q = query(eventosCollectionRef, orderBy('createdAt', 'desc'));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const lista = snapshot.docs.map((doc) => ({
@@ -59,6 +74,7 @@ export function useEventosLogic() {
     setTitle('');
     setDescricao('');
     setLocal('');
+    setOrganizador('');
     setData(null);
     setImageUri(null);
     setEditingId(null);
@@ -112,17 +128,12 @@ export function useEventosLogic() {
 
     const response = await fetch(
       `https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,
-      {
-        method: 'POST',
-        body: formData,
-      }
+      { method: 'POST', body: formData }
     );
 
     const json = await response.json();
 
-    if (!json.success) {
-      throw new Error('Erro no upload ImgBB');
-    }
+    if (!json.success) throw new Error('Erro no upload ImgBB');
 
     return json.data.url;
   };
@@ -145,18 +156,17 @@ export function useEventosLogic() {
         imageUrl = await uploadImagem();
       }
 
-      // ================= EDIT =================
+      // EDIT
       if (editingId) {
         const updateData: any = {
           title,
           descricao,
           local,
+          organizador,
           data: data.toISOString(),
         };
 
-        if (imageUrl) {
-          updateData.imageUrl = imageUrl;
-        }
+        if (imageUrl) updateData.imageUrl = imageUrl;
 
         await updateDoc(doc(db, 'eventos', editingId), updateData);
 
@@ -165,11 +175,12 @@ export function useEventosLogic() {
         return;
       }
 
-      // ================= CREATE =================
+      // CREATE
       await addDoc(eventosCollectionRef, {
         title,
         descricao,
         local,
+        organizador,
         data: data.toISOString(),
         imageUrl: imageUrl || '',
         userId: user.uid,
@@ -186,8 +197,21 @@ export function useEventosLogic() {
   };
 
   const deletarEvento = async (id: string) => {
+    const user = auth.currentUser;
+    if (!user) return;
+
     try {
-      await deleteDoc(doc(db, 'eventos', id));
+      const token = await getIdTokenResult(user);
+      const isAdminUser = token.claims.admin === true;
+
+      const eventoRef = doc(db, 'eventos', id);
+
+      if (!isAdminUser) {
+        Alert.alert('Sem permissão');
+        return;
+      }
+
+      await deleteDoc(eventoRef);
     } catch {
       Alert.alert('Erro ao deletar');
     }
@@ -198,6 +222,7 @@ export function useEventosLogic() {
     setTitle(evento.title);
     setDescricao(evento.descricao);
     setLocal(evento.local);
+    setOrganizador(evento.organizador || '');
     setData(new Date(evento.data));
     setImageUri(evento.imageUrl || null);
 
@@ -211,18 +236,20 @@ export function useEventosLogic() {
 
   return {
     eventos,
+    isAdmin, // 🔥 IMPORTANTE
     title,
     setTitle,
     descricao,
     setDescricao,
     local,
     setLocal,
+    organizador,
+    setOrganizador,
     data,
     isDatePickerVisible,
     abrirDatePicker,
     fecharDatePicker,
     confirmarData,
-    editingId,
     adicionarEvento,
     deletarEvento,
     iniciarEdicao,
