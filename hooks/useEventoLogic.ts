@@ -1,26 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Alert } from 'react-native';
-
 import { auth, db } from '../firebase';
-import {
-  collection,
-  addDoc,
-  onSnapshot,
-  query,
-  doc,
-  updateDoc,
-  deleteDoc,
-  orderBy,
-} from 'firebase/firestore';
-
+import { collection, addDoc, onSnapshot, query, doc, updateDoc, deleteDoc, orderBy } from 'firebase/firestore';
 import * as ImagePicker from 'expo-image-picker';
 import { evento } from '../types/evento';
-
 import { getIdTokenResult } from 'firebase/auth';
 
 export function useEventosLogic() {
   const [eventos, setEventos] = useState<evento[]>([]);
-
   const [isAdmin, setIsAdmin] = useState(false);
 
   const [title, setTitle] = useState('');
@@ -37,38 +24,27 @@ export function useEventosLogic() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isEditModalVisible, setEditModalVisible] = useState(false);
 
-  const eventosCollectionRef = collection(db, 'eventos');
-
-  const IMGBB_API_KEY = process.env.EXPO_PUBLIC_IMGBB_API_KEY!;
+  const ref = collection(db, 'eventos');
+  const API = process.env.EXPO_PUBLIC_IMGBB_API_KEY!;
 
   useEffect(() => {
-    const checkAdmin = async () => {
-      const user = auth.currentUser;
-      if (!user) return;
-
-      const token = await getIdTokenResult(user);
+    const check = async () => {
+      const u = auth.currentUser;
+      if (!u) return;
+      const token = await getIdTokenResult(u);
       setIsAdmin(token.claims.admin === true);
     };
-
-    checkAdmin();
+    check();
   }, []);
 
   useEffect(() => {
-    const q = query(eventosCollectionRef, orderBy('createdAt', 'desc'));
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const lista = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...(doc.data() as Omit<evento, 'id'>),
-      })) as evento[];
-
-      setEventos(lista);
+    const q = query(ref, orderBy('createdAt', 'desc'));
+    return onSnapshot(q, snap => {
+      setEventos(snap.docs.map(d => ({ id: d.id, ...(d.data() as any) })));
     });
-
-    return () => unsubscribe();
   }, []);
 
-  const resetForm = () => {
+  const reset = () => {
     setTitle('');
     setDescricao('');
     setLocal('');
@@ -81,151 +57,125 @@ export function useEventosLogic() {
   const abrirDatePicker = () => setDatePickerVisible(true);
   const fecharDatePicker = () => setDatePickerVisible(false);
 
-  const confirmarData = (selectedDate: Date) => {
-    setData(selectedDate);
+  const confirmarData = (d: Date) => {
+    setData(d);
     fecharDatePicker();
   };
 
-  const processarImagem = async (origem: 'camera' | 'galeria') => {
-    const options: ImagePicker.ImagePickerOptions = {
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.5,
-    };
-
-    let result;
-
-    if (origem === 'camera') {
-      const perm = await ImagePicker.requestCameraPermissionsAsync();
-      if (!perm.granted) return;
-
-      result = await ImagePicker.launchCameraAsync(options);
-    } else {
-      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!perm.granted) return;
-
-      result = await ImagePicker.launchImageLibraryAsync(options);
-    }
-
-    if (!result.canceled && result.assets?.[0]?.uri) {
-      setImageUri(result.assets[0].uri);
-    }
+const processarImagem = async (tipo: 'camera' | 'galeria') => {
+  const opt: ImagePicker.ImagePickerOptions = {
+    allowsEditing: true,
+    aspect: [4, 3],
+    quality: 0.5,
   };
 
-  const uploadImagem = async (): Promise<string> => {
+  let res;
+
+  if (tipo === 'camera') {
+    const p = await ImagePicker.requestCameraPermissionsAsync();
+    if (!p.granted) return;
+
+    res = await ImagePicker.launchCameraAsync(opt);
+  } else {
+    const p = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!p.granted) return;
+
+    res = await ImagePicker.launchImageLibraryAsync(opt);
+  }
+
+  if (!res.canceled && res.assets?.[0]) {
+    setImageUri(res.assets[0].uri);
+  }
+};
+
+  const upload = async () => {
     if (!imageUri) return '';
+    const fd = new FormData();
+    fd.append('image', { uri: imageUri, type: 'image/jpeg', name: 'img.jpg' } as any);
 
-    const formData = new FormData();
+    const r = await fetch(`https://api.imgbb.com/1/upload?key=${API}`, { method: 'POST', body: fd });
+    const j = await r.json();
 
-    formData.append('image', {
-      uri: imageUri,
-      type: 'image/jpeg',
-      name: 'upload.jpg',
-    } as any);
-
-    const response = await fetch(
-      `https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,
-      { method: 'POST', body: formData }
-    );
-
-    const json = await response.json();
-
-    if (!json.success) throw new Error('Erro no upload ImgBB');
-
-    return json.data.url;
+    if (!j.success) throw new Error('upload error');
+    return j.data.url;
   };
 
   const adicionarEvento = async () => {
-    const user = auth.currentUser;
-    if (!user) return;
-
-    if (!title.trim() || !data) {
-      Alert.alert('Preencha título e data');
-      return;
-    }
+    const u = auth.currentUser;
+    if (!u) return;
+    if (!title.trim() || !data) return Alert.alert('Preencha tudo');
 
     try {
       setUploading(true);
-
-      let imageUrl: string | undefined;
-
-      if (imageUri) {
-        imageUrl = await uploadImagem();
-      }
+      let img = '';
+      if (imageUri) img = await upload();
 
       if (editingId) {
-        const updateData: any = {
+        await updateDoc(doc(db, 'eventos', editingId), {
           title,
           descricao,
           local,
           organizador,
           data: data.toISOString(),
-        };
-
-        if (imageUrl) updateData.imageUrl = imageUrl;
-
-        await updateDoc(doc(db, 'eventos', editingId), updateData);
-
+          imageUrl: img || ''
+        });
         setEditModalVisible(false);
-        resetForm();
+        reset();
         return;
       }
 
-      await addDoc(eventosCollectionRef, {
+      await addDoc(ref, {
         title,
         descricao,
         local,
         organizador,
         data: data.toISOString(),
-        imageUrl: imageUrl || '',
-        userId: user.uid,
-        createdAt: new Date().toISOString(),
+        imageUrl: img || '',
+        userId: u.uid,
+        createdAt: new Date().toISOString()
       });
 
-      resetForm();
-    } catch (err) {
-      console.error(err);
-      Alert.alert('Erro ao salvar evento');
+      reset();
     } finally {
       setUploading(false);
     }
   };
 
-const deletarEvento = async (id: string) => {
-  const user = auth.currentUser;
-  if (!user) return;
+  const deletarEvento = async (id: string, ownerId?: string) => {
+    const u = auth.currentUser;
+    if (!u) return;
 
-  try {
-    const eventoRef = doc(db, 'eventos', id);
+    const ok = isAdmin || u.uid === ownerId;
+    if (!ok) return Alert.alert('Sem permissão');
 
-    await deleteDoc(eventoRef);
-  } catch (error) {
-    console.log(error);
-    Alert.alert('Erro ao deletar');
-  }
-};
+    await deleteDoc(doc(db, 'eventos', id));
+  };
 
-  const iniciarEdicao = (evento: evento) => {
-    setEditingId(evento.id);
-    setTitle(evento.title);
-    setDescricao(evento.descricao);
-    setLocal(evento.local);
-    setOrganizador(evento.organizador || '');
-    setData(new Date(evento.data));
-    setImageUri(evento.imageUrl || null);
+  const iniciarEdicao = (e: evento) => {
+    const u = auth.currentUser;
+    if (!u) return;
 
+    const ok = isAdmin || u.uid === e.userId;
+    if (!ok) return Alert.alert('Sem permissão');
+
+    setEditingId(e.id);
+    setTitle(e.title);
+    setDescricao(e.descricao);
+    setLocal(e.local);
+    setOrganizador(e.organizador || '');
+    setData(new Date(e.data));
+    setImageUri(e.imageUrl || null);
     setEditModalVisible(true);
   };
 
   const fecharEdicao = () => {
     setEditModalVisible(false);
-    resetForm();
+    reset();
   };
 
   return {
     eventos,
-    isAdmin, // 🔥 IMPORTANTE
+    isAdmin,
     title,
     setTitle,
     descricao,
@@ -239,13 +189,13 @@ const deletarEvento = async (id: string) => {
     abrirDatePicker,
     fecharDatePicker,
     confirmarData,
+    processarImagem,
+    imageUri,
+    uploading,
     adicionarEvento,
     deletarEvento,
     iniciarEdicao,
-    processarImagem,
-    uploading,
-    imageUri,
     isEditModalVisible,
-    fecharEdicao,
+    fecharEdicao
   };
 }

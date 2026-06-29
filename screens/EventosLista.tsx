@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from 'react';
-
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -9,10 +8,11 @@ import {
   Modal,
   TouchableOpacity,
   Alert,
+  TextInput
 } from 'react-native';
 
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { useEventosLogic } from '../hooks/useEventoLogic';
-
 import HeaderImage from '../components/HeaderImage';
 import { Colors, Radius, Spacing } from '../styles/theme';
 
@@ -33,6 +33,13 @@ export default function EventosLista() {
     setLocal,
     organizador,
     setOrganizador,
+    data,
+    isDatePickerVisible,
+    abrirDatePicker,
+    fecharDatePicker,
+    confirmarData,
+    processarImagem,
+    imageUri
   } = useEventosLogic();
 
   const [modalVisible, setModalVisible] = useState(false);
@@ -43,223 +50,115 @@ export default function EventosLista() {
     setModalVisible(true);
   }
 
-  function excluir(id: string) {
-    Alert.alert(
-      'Excluir evento',
-      'Tem certeza que deseja apagar este evento?',
-      [
-        {
-          text: 'Cancelar',
-          style: 'cancel',
-        },
-        {
-          text: 'Excluir',
-          style: 'destructive',
-          onPress: () => deletarEvento(id),
-        },
-      ]
-    );
+  function excluir(id: string, ownerId?: string) {
+    Alert.alert('Excluir evento', 'Tem certeza?', [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Excluir', style: 'destructive', onPress: () => deletarEvento(id, ownerId) }
+    ]);
   }
 
   return (
-    <View style={[
-      styles.container,
-      isAdmin && styles.adminContainer
-    ]}>
+    <View style={[styles.container, isAdmin && styles.adminContainer]}>
       <HeaderImage />
 
-      <View style={[
-        styles.header,
-        isAdmin && styles.adminHeader
-      ]}>
-        <Text style={styles.title}>
-          Eventos Marcados
-        </Text>
+      <View style={[styles.header, isAdmin && styles.adminHeader]}>
+        <Text style={styles.title}>Eventos Marcados</Text>
       </View>
 
       <FlatList
         data={eventos}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
         renderItem={({ item }) => (
-          <View style={[
-            styles.card,
-            isAdmin && styles.adminCard
-          ]}>
-
+          <View style={[styles.card, isAdmin && styles.adminCard]}>
             {item.imageUrl ? (
-              <Image
-                source={{ uri: item.imageUrl }}
-                style={styles.image}
-              />
+              <Image source={{ uri: item.imageUrl }} style={styles.image} />
             ) : (
               <View style={styles.placeholder}>
-                <Text style={styles.placeholderText}>
-                  Sem imagem
-                </Text>
+                <Text>Sem imagem</Text>
               </View>
             )}
 
-            <Text style={[
-              styles.name,
-              isAdmin && styles.adminText
-            ]}>
-              {item.title}
-            </Text>
+            <Text style={styles.name}>{item.title}</Text>
+            <Text style={styles.text}>Local: {item.local}</Text>
+            <Text style={styles.text}>Por: {item.organizador}</Text>
 
-            <Text style={[
-              styles.text,
-              isAdmin && styles.adminText
-            ]}>
-              Local: {item.local}
+            <Text style={styles.date}>
+              {item.data ? new Date(item.data).toLocaleDateString('pt-BR') : ''}
             </Text>
-
-            <Text style={[
-              styles.text,
-              isAdmin && styles.adminText
-            ]}>
-              Por: {item.organizador}
-            </Text>
-
-            <Text style={[
-              styles.date,
-              isAdmin && styles.adminDate
-            ]}>
-              {item.data
-                ? new Date(item.data).toLocaleDateString('pt-BR')
-                : ''}
-            </Text>
-
 
             <View style={styles.actionsRow}>
-
-              <TouchableOpacity
-                style={[
-                  styles.button,
-                  isAdmin && styles.adminButton
-                ]}
-                onPress={() => abrirDescricao(item)}
-              >
-                <Text style={styles.buttonText}>
-                  Descrição
-                </Text>
+              <TouchableOpacity style={styles.button} onPress={() => abrirDescricao(item)}>
+                <Text style={styles.buttonText}>Descrição</Text>
               </TouchableOpacity>
-
 
               {isAdmin && (
                 <>
-                  <TouchableOpacity
-                    style={[
-                      styles.button,
-                      styles.editButton
-                    ]}
-                    onPress={() => iniciarEdicao(item)}
-                  >
-                    <Text style={styles.buttonText}>
-                      Editar
-                    </Text>
+                  <TouchableOpacity style={styles.editButton} onPress={() => iniciarEdicao(item)}>
+                    <Text style={styles.buttonText}>Editar</Text>
                   </TouchableOpacity>
 
-
-                  <TouchableOpacity
-                    style={[
-                      styles.button,
-                      styles.deleteButton
-                    ]}
-                    onPress={() => excluir(item.id)}
-                  >
-                    <Text style={styles.buttonText}>
-                      Excluir
-                    </Text>
+                  <TouchableOpacity style={styles.deleteButton} onPress={() => excluir(item.id, item.userId)}>
+                    <Text style={styles.buttonText}>Excluir</Text>
                   </TouchableOpacity>
                 </>
               )}
-
             </View>
-
           </View>
         )}
       />
 
-
-      {/* MODAL DESCRIÇÃO */}
-      <Modal
-        visible={modalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setModalVisible(false)}
-      >
-
+      <Modal visible={modalVisible} transparent animationType="fade">
         <View style={styles.modalBackground}>
-
           <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Descrição</Text>
+            <Text style={styles.text}>{eventoSelecionado?.descricao}</Text>
 
-            <Text style={styles.modalTitle}>
-              Descrição
-            </Text>
-
-            <Text style={styles.modalDescription}>
-              {eventoSelecionado?.descricao || 'Sem descrição'}
-            </Text>
-
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setModalVisible(false)}
-            >
-              <Text style={styles.buttonText}>
-                Fechar
-              </Text>
+            <TouchableOpacity style={styles.button} onPress={() => setModalVisible(false)}>
+              <Text style={styles.buttonText} >Fechar</Text>
             </TouchableOpacity>
-
           </View>
-
         </View>
-
       </Modal>
 
+<Modal visible={isEditModalVisible} transparent animationType="slide">
+  <View style={styles.modalBackground}>
+    <View style={styles.modalContainer}>
+      <Text style={styles.modalTitle}>Editar Evento</Text>
 
-      {/* MODAL EDIÇÃO ADMIN */}
-      <Modal
-        visible={isEditModalVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={fecharEdicao}
-      >
+      <TextInput style={styles.input} value={title} onChangeText={setTitle} />
+      <TextInput style={styles.input} value={descricao} onChangeText={setDescricao} />
+      <TextInput style={styles.input} value={local} onChangeText={setLocal} />
+      <TextInput style={styles.input} value={organizador} onChangeText={setOrganizador} />
 
-        <View style={styles.modalBackground}>
+      <TouchableOpacity style={styles.blueButton} onPress={abrirDatePicker}>
+        <Text style={styles.blueButtonText}>Alterar data</Text>
+      </TouchableOpacity>
 
-          <View style={styles.modalContainer}>
+      <Text>
+        {data ? `Nova data: ${data.toLocaleDateString('pt-BR')}` : 'Data não alterada'}
+      </Text>
 
-            <Text style={styles.modalTitle}>
-              Editar Evento
-            </Text>
+      <DateTimePickerModal
+        isVisible={isDatePickerVisible}
+        mode="date"
+        onConfirm={confirmarData}
+        onCancel={fecharDatePicker}
+      />
 
+      <TouchableOpacity style={styles.blueButton} onPress={() => processarImagem('galeria')}>
+        <Text style={styles.blueButtonText}>Alterar imagem</Text>
+      </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={adicionarEvento}
-            >
-              <Text style={styles.buttonText}>
-                Salvar alterações
-              </Text>
-            </TouchableOpacity>
+      <TouchableOpacity style={styles.blueButtonPrimary} onPress={adicionarEvento}>
+        <Text style={styles.blueButtonText}>Salvar alterações</Text>
+      </TouchableOpacity>
 
-
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={fecharEdicao}
-            >
-              <Text style={styles.buttonText}>
-                Cancelar
-              </Text>
-            </TouchableOpacity>
-
-          </View>
-
-        </View>
-
-      </Modal>
-
+      <TouchableOpacity style={styles.cancelButton} onPress={fecharEdicao}>
+        <Text style={styles.cancelButtonText}>Cancelar</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+</Modal>
     </View>
   );
 }
@@ -359,7 +258,7 @@ const styles = StyleSheet.create({
 
   modalContainer: {
     width: '100%',
-    backgroundColor: Colors.white,
+    backgroundColor: '#ffffff',
     padding: Spacing.lg,
     borderRadius: Radius.md,
   },
@@ -393,10 +292,20 @@ const styles = StyleSheet.create({
 
 editButton: {
   backgroundColor: '#4b7bec',
+   paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: Radius.sm,
+    alignSelf: 'flex-end',
+    marginTop: Spacing.sm,
 },
 
 deleteButton: {
   backgroundColor: '#c94c4c',
+   paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: Radius.sm,
+    alignSelf: 'flex-end',
+    marginTop: Spacing.sm,
 },
 adminContainer: {
   backgroundColor: '#1C2C4A',
@@ -425,5 +334,47 @@ adminButton: {
  borderWidth: 1,
  borderColor: '#667EA8',
 },
+input: {
+  backgroundColor: '#ffffff',
+  padding: 10,
+  borderRadius: 8,
+  marginBottom: 10,
+  borderWidth: 1,
+  borderColor: '#ccc',
+  color: '#000',
+},
+blueButton: {
+  backgroundColor: '#1f3b73',
+  padding: 10,
+  borderRadius: 8,
+  marginTop: 10,
+  alignItems: 'center'
+},
+
+blueButtonPrimary: {
+  backgroundColor: '#162c55',
+  padding: 12,
+  borderRadius: 10,
+  marginTop: 15,
+  alignItems: 'center'
+},
+
+blueButtonText: {
+  color: '#fff',
+  fontWeight: 'bold'
+},
+
+cancelButton: {
+  backgroundColor: '#2a2f3a',
+  padding: 10,
+  borderRadius: 8,
+  marginTop: 10,
+  alignItems: 'center'
+},
+
+cancelButtonText: {
+  color: '#fff',
+  fontWeight: '600'
+}
 
 });

@@ -1,5 +1,4 @@
 import React from 'react';
-
 import {
   Text,
   TextInput,
@@ -8,13 +7,12 @@ import {
   Modal,
   TouchableOpacity,
   View,
-  Alert,
+  Alert
 } from 'react-native';
 
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { useEventosLogic } from '../hooks/useEventoLogic';
 import HeaderImage from '../components/HeaderImage';
-
 import { Colors, Radius, Spacing } from '../styles/theme';
 import { auth } from '../firebase';
 
@@ -42,23 +40,16 @@ export default function Eventos() {
     uploading,
     isEditModalVisible,
     fecharEdicao,
-    isAdmin,
+    isAdmin
   } = useEventosLogic();
 
-  const meusEventos = eventos.filter(
-    (item) => item.userId === auth.currentUser?.uid
-  );
-
+  const meusEventos = eventos.filter(e => e.userId === auth.currentUser?.uid);
   const eventosVisiveis = isAdmin ? eventos : meusEventos;
 
-  const confirmarExclusao = (id: string) => {
+  const confirmarExclusao = (id: string, ownerId: string) => {
     Alert.alert('Confirmação', 'tem certeza que deseja apagar este evento?', [
       { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Excluir',
-        style: 'destructive',
-        onPress: () => deletarEvento(id),
-      },
+      { text: 'Excluir', style: 'destructive', onPress: () => deletarEvento(id, ownerId) }
     ]);
   };
 
@@ -77,71 +68,25 @@ export default function Eventos() {
               <Text style={styles.title}>Criar Evento</Text>
             </View>
 
-            <TextInput
-              style={[styles.input, isAdmin && styles.adminInput]}
-              placeholder="Título"
-              placeholderTextColor={Colors.muted}
-              value={title}
-              onChangeText={setTitle}
-            />
+            <TextInput style={styles.input} placeholder="Título" value={title} onChangeText={setTitle} />
+            <TextInput style={styles.input} placeholder="Descrição" value={descricao} onChangeText={setDescricao} />
+            <TextInput style={styles.input} placeholder="Local" value={local} onChangeText={setLocal} />
+            <TextInput style={styles.input} placeholder="Organizador" value={organizador} onChangeText={setOrganizador} />
 
-            <TextInput
-              style={[styles.input, isAdmin && styles.adminInput]}
-              placeholder="Descrição"
-              placeholderTextColor={Colors.muted}
-              value={descricao}
-              onChangeText={setDescricao}
-            />
-
-            <TextInput
-              style={[styles.input, isAdmin && styles.adminInput]}
-              placeholder="Local"
-              placeholderTextColor={Colors.muted}
-              value={local}
-              onChangeText={setLocal}
-            />
-
-            <TextInput
-              style={[styles.input, isAdmin && styles.adminInput]}
-              placeholder="Organizador"
-              placeholderTextColor={Colors.muted}
-              value={organizador}
-              onChangeText={setOrganizador}
-            />
-
-            <TouchableOpacity
-              style={[styles.button, isAdmin && styles.adminButton]}
-              onPress={abrirDatePicker}
-            >
+            <TouchableOpacity style={styles.button} onPress={abrirDatePicker}>
               <Text style={styles.buttonText}>Selecionar data</Text>
             </TouchableOpacity>
 
             <Text style={styles.status}>
-              {data
-                ? `Data: ${data.toLocaleDateString('pt-BR')}`
-                : 'Nenhuma data selecionada'}
+              {data ? `Data: ${data.toLocaleDateString('pt-BR')}` : 'Nenhuma data selecionada'}
             </Text>
 
-            <TouchableOpacity
-              style={[styles.buttonSecondary, isAdmin && styles.adminButton]}
-              onPress={() => processarImagem('galeria')}
-            >
-              <Text style={styles.buttonTextSecondary}>
-                Selecionar imagem
-              </Text>
+            <TouchableOpacity style={styles.buttonSecondary} onPress={() => processarImagem('galeria')}>
+              <Text style={styles.buttonText}>Selecionar imagem</Text>
             </TouchableOpacity>
 
-            <Text style={styles.status}>
-              {imageUri ? 'Imagem selecionada' : 'Nenhuma imagem selecionada'}
-            </Text>
-
-            <TouchableOpacity
-              style={[styles.buttonPrimary, isAdmin && styles.adminButton]}
-              onPress={adicionarEvento}
-            >
-              <Text style={styles.buttonText}>
-                {uploading ? 'Salvando...' : 'Criar evento'}
-              </Text>
+            <TouchableOpacity style={styles.buttonPrimary} onPress={adicionarEvento}>
+              <Text style={styles.buttonText}>{uploading ? 'Salvando...' : 'Criar evento'}</Text>
             </TouchableOpacity>
 
             <DateTimePickerModal
@@ -157,43 +102,26 @@ export default function Eventos() {
           </>
         }
         renderItem={({ item }) => {
-          const isOwner =
-            item.userId === auth.currentUser?.uid || isAdmin;
+          const isOwner = item.userId === auth.currentUser?.uid || isAdmin;
 
           return (
             <View style={[styles.card, isAdmin && styles.adminCard]}>
-              <Text style={[styles.name, isAdmin && styles.adminText]}>
-                {item.title}
-              </Text>
-
-              <Text style={[styles.text, isAdmin && styles.adminText]}>
-                {item.descricao}
-              </Text>
-
-              <Text style={[styles.text, isAdmin && styles.adminText]}>
-                Local: {item.local}
-              </Text>
+              <Text style={styles.name}>{item.title}</Text>
+              <Text style={styles.text}>{item.descricao}</Text>
+              <Text style={styles.text}>Local: {item.local}</Text>
 
               <Text style={styles.date}>
-                {item.data
-                  ? new Date(item.data).toLocaleDateString('pt-BR')
-                  : ''}
+                {item.data ? new Date(item.data).toLocaleDateString('pt-BR') : ''}
               </Text>
 
               {isOwner && (
                 <View style={styles.actions}>
-                  <TouchableOpacity
-                    style={styles.smallButton}
-                    onPress={() => iniciarEdicao(item)}
-                  >
-                    <Text style={styles.smallButtonText}>Editar</Text>
+                  <TouchableOpacity style={styles.smallButton} onPress={() => iniciarEdicao(item)}>
+                    <Text style={styles.buttonText}>Editar</Text>
                   </TouchableOpacity>
 
-                  <TouchableOpacity
-                    style={styles.smallButtonDanger}
-                    onPress={() => confirmarExclusao(item.id)}
-                  >
-                    <Text style={styles.smallButtonText}>Excluir</Text>
+                  <TouchableOpacity style={styles.smallButtonDanger} onPress={() => confirmarExclusao(item.id, item.userId)}>
+                    <Text style={styles.buttonText}>Excluir</Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -202,20 +130,32 @@ export default function Eventos() {
         }}
       />
 
-      {/* MODAL (sem mudanças de estilo) */}
       <Modal visible={isEditModalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, isAdmin && styles.adminModalContent]}>
-            <Text style={[styles.modalTitle, isAdmin && styles.adminText]}>
-              Editar Evento
+            <Text style={styles.modalTitle}>Editar Evento</Text>
+
+            <TextInput style={styles.input} value={title} onChangeText={setTitle} />
+            <TextInput style={styles.input} value={descricao} onChangeText={setDescricao} />
+            <TextInput style={styles.input} value={local} onChangeText={setLocal} />
+            <TextInput style={styles.input} value={organizador} onChangeText={setOrganizador} />
+
+            <TouchableOpacity style={styles.button} onPress={abrirDatePicker}>
+              <Text style={styles.buttonText}>Alterar data</Text>
+            </TouchableOpacity>
+
+            <Text style={styles.status}>
+              {data ? `Nova data: ${data.toLocaleDateString('pt-BR')}` : 'Data não alterada'}
             </Text>
 
-            <TextInput style={[styles.input, isAdmin && styles.adminInput]} placeholder="Título" value={title} onChangeText={setTitle} />
-            <TextInput style={[styles.input, isAdmin && styles.adminInput]} placeholder="Descrição" value={descricao} onChangeText={setDescricao} />
-            <TextInput style={[styles.input, isAdmin && styles.adminInput]} placeholder="Local" value={local} onChangeText={setLocal} />
-            <TextInput style={[styles.input, isAdmin && styles.adminInput]} placeholder="Organizador" value={organizador} onChangeText={setOrganizador} />
+            <DateTimePickerModal
+              isVisible={isDatePickerVisible}
+              mode="date"
+              onConfirm={confirmarData}
+              onCancel={fecharDatePicker}
+            />
 
-            <TouchableOpacity style={[styles.buttonPrimary, isAdmin && styles.adminButton]} onPress={adicionarEvento}>
+            <TouchableOpacity style={styles.buttonPrimary} onPress={adicionarEvento}>
               <Text style={styles.buttonText}>Salvar alterações</Text>
             </TouchableOpacity>
 
@@ -379,7 +319,7 @@ adminHeader: {
 
 adminInput: {
  backgroundColor: '#223559',
- color: '#FFFFFF',
+ color: '#223559',
  borderColor: '#667EA8',
 },
 
