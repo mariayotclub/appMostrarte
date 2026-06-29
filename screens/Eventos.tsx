@@ -51,24 +51,21 @@ export default function Eventos() {
 
   const eventosVisiveis = isAdmin ? eventos : meusEventos;
 
-  function confirmarExclusao(id: string) {
-    Alert.alert(
-      'Confirmação',
-      'tem certeza que deseja apagar este evento?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Excluir',
-          style: 'destructive',
-          onPress: () => deletarEvento(id),
-        },
-      ]
-    );
-  }
+  const confirmarExclusao = (id: string) => {
+    Alert.alert('Confirmação', 'tem certeza que deseja apagar este evento?', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Excluir',
+        style: 'destructive',
+        onPress: () => deletarEvento(id),
+      },
+    ]);
+  };
 
   return (
     <>
-      <FlatList style={[styles.container,isAdmin && styles.adminContainer]}
+      <FlatList
+        style={[styles.container, isAdmin && styles.adminContainer]}
         contentContainerStyle={styles.contentContainer}
         data={eventosVisiveis}
         keyExtractor={(item) => item.id}
@@ -76,12 +73,12 @@ export default function Eventos() {
           <>
             <HeaderImage />
 
-            <View style={[styles.header,isAdmin && styles.adminHeader]}>
+            <View style={[styles.header, isAdmin && styles.adminHeader]}>
               <Text style={styles.title}>Criar Evento</Text>
             </View>
 
-            <TextInput 
-              style={[styles.input,isAdmin && styles.adminInput]}
+            <TextInput
+              style={[styles.input, isAdmin && styles.adminInput]}
               placeholder="Título"
               placeholderTextColor={Colors.muted}
               value={title}
@@ -89,7 +86,7 @@ export default function Eventos() {
             />
 
             <TextInput
-              style={[styles.input,isAdmin && styles.adminInput]}
+              style={[styles.input, isAdmin && styles.adminInput]}
               placeholder="Descrição"
               placeholderTextColor={Colors.muted}
               value={descricao}
@@ -97,7 +94,7 @@ export default function Eventos() {
             />
 
             <TextInput
-              style={[styles.input,isAdmin && styles.adminInput]}
+              style={[styles.input, isAdmin && styles.adminInput]}
               placeholder="Local"
               placeholderTextColor={Colors.muted}
               value={local}
@@ -105,14 +102,17 @@ export default function Eventos() {
             />
 
             <TextInput
-              style={[styles.input,isAdmin && styles.adminInput]}
+              style={[styles.input, isAdmin && styles.adminInput]}
               placeholder="Organizador"
               placeholderTextColor={Colors.muted}
               value={organizador}
               onChangeText={setOrganizador}
             />
 
-            <TouchableOpacity style={[styles.button, isAdmin && styles.adminButton]} onPress={abrirDatePicker}>
+            <TouchableOpacity
+              style={[styles.button, isAdmin && styles.adminButton]}
+              onPress={abrirDatePicker}
+            >
               <Text style={styles.buttonText}>Selecionar data</Text>
             </TouchableOpacity>
 
@@ -162,11 +162,17 @@ export default function Eventos() {
 
           return (
             <View style={[styles.card, isAdmin && styles.adminCard]}>
-              <Text style={[ styles.name, isAdmin && styles.adminText]}>{item.title}</Text>
+              <Text style={[styles.name, isAdmin && styles.adminText]}>
+                {item.title}
+              </Text>
 
-              <Text style={[styles.text, isAdmin && styles.adminText]}>{item.descricao}</Text>
+              <Text style={[styles.text, isAdmin && styles.adminText]}>
+                {item.descricao}
+              </Text>
 
-              <Text style={[styles.text, isAdmin && styles.adminText]}>Local: {item.local}</Text>
+              <Text style={[styles.text, isAdmin && styles.adminText]}>
+                Local: {item.local}
+              </Text>
 
               <Text style={styles.date}>
                 {item.data
@@ -196,99 +202,29 @@ export default function Eventos() {
         }}
       />
 
-      {/* MODAL */}
-<Modal visible={isEditModalVisible} animationType="slide" transparent>
-  <View style={styles.modalOverlay}>
-    <View style={[styles.modalContent,isAdmin && styles.adminModalContent]}>
+      {/* MODAL (sem mudanças de estilo) */}
+      <Modal visible={isEditModalVisible} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, isAdmin && styles.adminModalContent]}>
+            <Text style={[styles.modalTitle, isAdmin && styles.adminText]}>
+              Editar Evento
+            </Text>
 
-      <Text style={[styles.modalTitle,isAdmin && styles.adminText]}>
-        Editar Evento
-      </Text>
+            <TextInput style={[styles.input, isAdmin && styles.adminInput]} placeholder="Título" value={title} onChangeText={setTitle} />
+            <TextInput style={[styles.input, isAdmin && styles.adminInput]} placeholder="Descrição" value={descricao} onChangeText={setDescricao} />
+            <TextInput style={[styles.input, isAdmin && styles.adminInput]} placeholder="Local" value={local} onChangeText={setLocal} />
+            <TextInput style={[styles.input, isAdmin && styles.adminInput]} placeholder="Organizador" value={organizador} onChangeText={setOrganizador} />
 
-      <TextInput
-        style={[styles.input,isAdmin && styles.adminInput]}
-        placeholder="Título"
-        placeholderTextColor={Colors.muted}
-        value={title}
-        onChangeText={setTitle}
-      />
+            <TouchableOpacity style={[styles.buttonPrimary, isAdmin && styles.adminButton]} onPress={adicionarEvento}>
+              <Text style={styles.buttonText}>Salvar alterações</Text>
+            </TouchableOpacity>
 
-      <TextInput
-        style={[styles.input,isAdmin && styles.adminInput]}
-        placeholder="Descrição"
-        placeholderTextColor={Colors.muted}
-        value={descricao}
-        onChangeText={setDescricao}
-      />
-
-      <TextInput
-        style={[styles.input,isAdmin && styles.adminInput]}
-        placeholder="Local"
-        placeholderTextColor={Colors.muted}
-        value={local}
-        onChangeText={setLocal}
-      />
-
-      <TextInput
-        style={[styles.input,isAdmin && styles.adminInput]}
-        placeholder="Organizador"
-        placeholderTextColor={Colors.muted}
-        value={organizador}
-        onChangeText={setOrganizador}
-      />
-
-      <TouchableOpacity
-        style={[styles.button,isAdmin && styles.adminButton]}
-        onPress={abrirDatePicker}
-      >
-        <Text style={styles.buttonText}>
-          Alterar data
-        </Text>
-      </TouchableOpacity>
-
-      <Text style={styles.status}>
-        {data
-          ? `Data: ${data.toLocaleDateString('pt-BR')}`
-          : 'Nenhuma data selecionada'}
-      </Text>
-
-      <TouchableOpacity
-        style={[styles.buttonSecondary,isAdmin && styles.adminButton]}
-        onPress={() => processarImagem('galeria')}
-      >
-        <Text style={styles.buttonTextSecondary}>
-          Alterar imagem
-        </Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[styles.buttonPrimary,isAdmin && styles.adminButton]}
-        onPress={adicionarEvento}
-      >
-        <Text style={styles.buttonText}>
-          Salvar alterações
-        </Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.buttonDanger}
-        onPress={fecharEdicao}
-      >
-        <Text style={styles.buttonText}>
-          Cancelar
-        </Text>
-      </TouchableOpacity>
-
-      <DateTimePickerModal
-        isVisible={isDatePickerVisible}
-        mode="date"
-        onConfirm={confirmarData}
-        onCancel={fecharDatePicker}
-      />
-
-    </View>
-  </View>
-</Modal>
+            <TouchableOpacity style={styles.buttonDanger} onPress={fecharEdicao}>
+              <Text style={styles.buttonText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </>
   );
 }

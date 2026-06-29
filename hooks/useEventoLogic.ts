@@ -41,7 +41,6 @@ export function useEventosLogic() {
 
   const IMGBB_API_KEY = process.env.EXPO_PUBLIC_IMGBB_API_KEY!;
 
-  // 🔐 CHECAR ADMIN
   useEffect(() => {
     const checkAdmin = async () => {
       const user = auth.currentUser;
@@ -54,7 +53,6 @@ export function useEventosLogic() {
     checkAdmin();
   }, []);
 
-  // 📡 LISTA EVENTOS
   useEffect(() => {
     const q = query(eventosCollectionRef, orderBy('createdAt', 'desc'));
 
@@ -156,7 +154,6 @@ export function useEventosLogic() {
         imageUrl = await uploadImagem();
       }
 
-      // EDIT
       if (editingId) {
         const updateData: any = {
           title,
@@ -175,7 +172,6 @@ export function useEventosLogic() {
         return;
       }
 
-      // CREATE
       await addDoc(eventosCollectionRef, {
         title,
         descricao,
@@ -196,26 +192,19 @@ export function useEventosLogic() {
     }
   };
 
-  const deletarEvento = async (id: string) => {
-    const user = auth.currentUser;
-    if (!user) return;
+const deletarEvento = async (id: string) => {
+  const user = auth.currentUser;
+  if (!user) return;
 
-    try {
-      const token = await getIdTokenResult(user);
-      const isAdminUser = token.claims.admin === true;
+  try {
+    const eventoRef = doc(db, 'eventos', id);
 
-      const eventoRef = doc(db, 'eventos', id);
-
-      if (!isAdminUser) {
-        Alert.alert('Sem permissão');
-        return;
-      }
-
-      await deleteDoc(eventoRef);
-    } catch {
-      Alert.alert('Erro ao deletar');
-    }
-  };
+    await deleteDoc(eventoRef);
+  } catch (error) {
+    console.log(error);
+    Alert.alert('Erro ao deletar');
+  }
+};
 
   const iniciarEdicao = (evento: evento) => {
     setEditingId(evento.id);

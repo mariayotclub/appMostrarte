@@ -1,7 +1,11 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { View } from 'react-native';
+
+import { signOut } from 'firebase/auth';
+import { auth } from '../firebase';
 
 import EventosLista from '../screens/EventosLista';
 import Eventos from '../screens/Eventos';
@@ -9,6 +13,27 @@ import Eventos from '../screens/Eventos';
 import { useEventosLogic } from '../hooks/useEventoLogic';
 
 const Tab = createBottomTabNavigator();
+
+function LogoutScreen({ navigation }: any) {
+  useEffect(() => {
+    const logout = async () => {
+      try {
+        await signOut(auth);
+
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Login' }],
+        });
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    logout();
+  }, []);
+
+  return <View />;
+}
 
 export default function MainTabs() {
   const { isAdmin } = useEventosLogic();
@@ -38,11 +63,7 @@ export default function MainTabs() {
         options={{
           title: 'Eventos',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons
-              name="calendar-outline"
-              size={size}
-              color={color}
-            />
+            <Ionicons name="calendar-outline" size={size} color={color} />
           ),
         }}
       />
@@ -53,11 +74,18 @@ export default function MainTabs() {
         options={{
           title: 'Criar',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons
-              name="add-circle-outline"
-              size={size}
-              color={color}
-            />
+            <Ionicons name="add-circle-outline" size={size} color={color} />
+          ),
+        }}
+      />
+
+      <Tab.Screen
+        name="Sair"
+        component={LogoutScreen}
+        options={{
+          title: 'Sair',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="log-out-outline" size={size} color={color} />
           ),
         }}
       />
