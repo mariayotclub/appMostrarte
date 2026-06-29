@@ -8,71 +8,57 @@ import {
   StyleSheet,
   Modal,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 
-import {
-  collection,
-  onSnapshot,
-  query,
-  orderBy,
-} from 'firebase/firestore';
-
-import { db, auth } from '../firebase';
-import { getIdTokenResult } from 'firebase/auth';
+import { useEventosLogic } from '../hooks/useEventoLogic';
 
 import HeaderImage from '../components/HeaderImage';
 import { Colors, Radius, Spacing } from '../styles/theme';
 
 export default function EventosLista() {
-  const [eventos, setEventos] = useState<any[]>([]);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const {
+    eventos,
+    isAdmin,
+    deletarEvento,
+    iniciarEdicao,
+    isEditModalVisible,
+    fecharEdicao,
+    adicionarEvento,
+    title,
+    setTitle,
+    descricao,
+    setDescricao,
+    local,
+    setLocal,
+    organizador,
+    setOrganizador,
+  } = useEventosLogic();
 
   const [modalVisible, setModalVisible] = useState(false);
   const [eventoSelecionado, setEventoSelecionado] = useState<any>(null);
-
-  useEffect(() => {
-    const checkAdmin = async () => {
-      const user = auth.currentUser;
-      if (!user) return;
-
-      const token = await getIdTokenResult(user);
-      setIsAdmin(token.claims.admin === true);
-    };
-
-    checkAdmin();
-  }, []);
-
-  useEffect(() => {
-    const q = query(
-      collection(db, 'eventos'),
-      orderBy('createdAt', 'desc')
-    );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const lista = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
-      setEventos(lista);
-    });
-
-    return () => unsubscribe();
-  }, []);
 
   function abrirDescricao(evento: any) {
     setEventoSelecionado(evento);
     setModalVisible(true);
   }
 
-  function editarEvento(evento: any) {
-    
-    console.log('Editar:', evento.id);
-  }
-
-  function deletarEvento(id: string) {
-    console.log('Deletar:', id);
-   
+  function excluir(id: string) {
+    Alert.alert(
+      'Excluir evento',
+      'Tem certeza que deseja apagar este evento?',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Excluir',
+          style: 'destructive',
+          onPress: () => deletarEvento(id),
+        },
+      ]
+    );
   }
 
   return (
@@ -83,10 +69,12 @@ export default function EventosLista() {
       <HeaderImage />
 
       <View style={[
-      styles.header,
-      isAdmin && styles.adminHeader
-    ]}>
-        <Text style={styles.title}>Eventos Marcados</Text>
+        styles.header,
+        isAdmin && styles.adminHeader
+      ]}>
+        <Text style={styles.title}>
+          Eventos Marcados
+        </Text>
       </View>
 
       <FlatList
@@ -95,60 +83,104 @@ export default function EventosLista() {
         contentContainerStyle={styles.listContent}
         renderItem={({ item }) => (
           <View style={[
-        styles.card,
-        isAdmin && styles.adminCard
-      ]}>
+            styles.card,
+            isAdmin && styles.adminCard
+          ]}>
+
             {item.imageUrl ? (
-              <Image source={{ uri: item.imageUrl }} style={styles.image} />
+              <Image
+                source={{ uri: item.imageUrl }}
+                style={styles.image}
+              />
             ) : (
               <View style={styles.placeholder}>
-                <Text style={styles.placeholderText}>Sem imagem</Text>
+                <Text style={styles.placeholderText}>
+                  Sem imagem
+                </Text>
               </View>
             )}
 
-           <Text style={[styles.name,isAdmin && styles.adminText]}>{item.title}</Text>
+            <Text style={[
+              styles.name,
+              isAdmin && styles.adminText
+            ]}>
+              {item.title}
+            </Text>
 
-            <Text style={[styles.text,isAdmin && styles.adminText]}>Local: {item.local}</Text>
+            <Text style={[
+              styles.text,
+              isAdmin && styles.adminText
+            ]}>
+              Local: {item.local}
+            </Text>
 
-            <Text style={[styles.text,isAdmin && styles.adminText]}>Por: {item.organizador}</Text>
+            <Text style={[
+              styles.text,
+              isAdmin && styles.adminText
+            ]}>
+              Por: {item.organizador}
+            </Text>
 
-            <Text style={[styles.date,isAdmin && styles.adminDate]}>
+            <Text style={[
+              styles.date,
+              isAdmin && styles.adminDate
+            ]}>
               {item.data
                 ? new Date(item.data).toLocaleDateString('pt-BR')
                 : ''}
             </Text>
 
+
             <View style={styles.actionsRow}>
 
               <TouchableOpacity
-                style={[styles.button, isAdmin && styles.adminButton]}
+                style={[
+                  styles.button,
+                  isAdmin && styles.adminButton
+                ]}
                 onPress={() => abrirDescricao(item)}
               >
-                <Text style={styles.buttonText}>Descrição</Text>
+                <Text style={styles.buttonText}>
+                  Descrição
+                </Text>
               </TouchableOpacity>
+
 
               {isAdmin && (
                 <>
                   <TouchableOpacity
-                    style={[styles.button, styles.editButton]}
-                    onPress={() => editarEvento(item)}
+                    style={[
+                      styles.button,
+                      styles.editButton
+                    ]}
+                    onPress={() => iniciarEdicao(item)}
                   >
-                    <Text style={styles.buttonText}>Editar</Text>
+                    <Text style={styles.buttonText}>
+                      Editar
+                    </Text>
                   </TouchableOpacity>
 
+
                   <TouchableOpacity
-                    style={[styles.button, styles.deleteButton]}
-                    onPress={() => deletarEvento(item.id)}
+                    style={[
+                      styles.button,
+                      styles.deleteButton
+                    ]}
+                    onPress={() => excluir(item.id)}
                   >
-                    <Text style={styles.buttonText}>Excluir</Text>
+                    <Text style={styles.buttonText}>
+                      Excluir
+                    </Text>
                   </TouchableOpacity>
                 </>
               )}
 
             </View>
+
           </View>
         )}
       />
+
 
       {/* MODAL DESCRIÇÃO */}
       <Modal
@@ -157,9 +189,14 @@ export default function EventosLista() {
         animationType="fade"
         onRequestClose={() => setModalVisible(false)}
       >
+
         <View style={styles.modalBackground}>
+
           <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Descrição</Text>
+
+            <Text style={styles.modalTitle}>
+              Descrição
+            </Text>
 
             <Text style={styles.modalDescription}>
               {eventoSelecionado?.descricao || 'Sem descrição'}
@@ -169,11 +206,60 @@ export default function EventosLista() {
               style={styles.closeButton}
               onPress={() => setModalVisible(false)}
             >
-              <Text style={styles.buttonText}>Fechar</Text>
+              <Text style={styles.buttonText}>
+                Fechar
+              </Text>
             </TouchableOpacity>
+
           </View>
+
         </View>
+
       </Modal>
+
+
+      {/* MODAL EDIÇÃO ADMIN */}
+      <Modal
+        visible={isEditModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={fecharEdicao}
+      >
+
+        <View style={styles.modalBackground}>
+
+          <View style={styles.modalContainer}>
+
+            <Text style={styles.modalTitle}>
+              Editar Evento
+            </Text>
+
+
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={adicionarEvento}
+            >
+              <Text style={styles.buttonText}>
+                Salvar alterações
+              </Text>
+            </TouchableOpacity>
+
+
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={fecharEdicao}
+            >
+              <Text style={styles.buttonText}>
+                Cancelar
+              </Text>
+            </TouchableOpacity>
+
+          </View>
+
+        </View>
+
+      </Modal>
+
     </View>
   );
 }
