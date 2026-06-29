@@ -85,6 +85,10 @@ export default function Eventos() {
               <Text style={styles.buttonText}>Selecionar imagem</Text>
             </TouchableOpacity>
 
+            <Text style={styles.status}>
+            {imageUri ? 'Imagem selecionada' : 'Nenhuma imagem selecionada'}
+            </Text>
+
             <TouchableOpacity style={styles.buttonPrimary} onPress={adicionarEvento}>
               <Text style={styles.buttonText}>{uploading ? 'Salvando...' : 'Criar evento'}</Text>
             </TouchableOpacity>
@@ -154,6 +158,14 @@ export default function Eventos() {
               onConfirm={confirmarData}
               onCancel={fecharDatePicker}
             />
+
+            <TouchableOpacity style={styles.buttonSecondary} onPress={() => processarImagem('galeria')}>
+            <Text style={styles.buttonText}>Selecionar imagem</Text>
+              </TouchableOpacity>
+
+              <Text style={styles.status}>
+                {imageUri ? 'Imagem selecionada' : 'Nenhuma imagem selecionada'}
+            </Text>
 
             <TouchableOpacity style={styles.buttonPrimary} onPress={adicionarEvento}>
               <Text style={styles.buttonText}>Salvar alterações</Text>
